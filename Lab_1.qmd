@@ -1,0 +1,137 @@
+---
+title: "Лабораторна робота №1: Основи маніпуляції даними з dplyr"
+author: "Valeriia Marynchenko, `r format(Sys.time(), '%Y')`"
+date: "`r Sys.Date()`"
+output:
+  html:
+    highlight: tango
+    toc: yes
+        
+  #   highlight: tango
+  #   toc: yes
+  html_notebook:
+    toc: yes # генерація змісту документу
+    toc_float: true
+    highlight: tango # Колір підсвічування коду
+fontsize: 12pt # розмір шрифту
+header-includes:
+ \usepackage[T2A]{fontenc}
+ \usepackage[utf8]{inputenc}
+ \usepackage[russian]{babel}
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+#install.packages("knitr")
+knitr::opts_chunk$set(echo = TRUE, message = TRUE)
+```
+
+```{r}
+#install.packages("dplyr")
+```
+
+### Варіант 1
+
+Датасет `starwars`
+
+#### Завдання 1: Вибірка та фільтрація
+
+Відфільтрувати персонажів з відомим зростом і масою.
+Вибрати name, height, mass, species, homeworld.
+Відсортувати за зростанням зросту.
+
+```{r}
+#-----------------------------------------------------------------------------------------]
+#install.packages("tidyverse")
+library(tidyverse)
+
+
+
+task1_result <- starwars |>
+  filter(!is.na(height), !is.na(mass)) |>
+  
+  select(name, height, mass, species, homeworld) |>
+  
+  arrange(height)
+
+print("---  Task 1 result ---")
+print(task1_result)
+```
+
+#### Завдання 2: Створення нового стовпця та фільтрація ---
+
+Додати стовпець bmi: mass / (height / 100)\^2.
+Обрати персонажів, у яких bmi \> 25, і відсортувати за спаданням bmi.
+
+```{r}
+task2_result <- starwars |>
+  filter(!is.na(height), !is.na(mass)) |>
+  
+  mutate(
+    bmi = mass / (height / 100)^2
+  ) |>
+  
+  filter(bmi > 25) |>
+  
+  arrange(desc(bmi)) |>
+  
+  select(name, height, mass, bmi)
+
+print("--- Task 2 result ---")
+print(task2_result)
+```
+
+#### Завдання 3: Групування та агрегація (summarise + across) ---
+
+Для кожної раси (species), яка представлена більш ніж одним персонажем: Розрахувати середній зріст, середню масу та кількість персонажів (n).
+
+```{r}
+task3_result <- starwars |>
+  group_by(species) |>
+  
+  summarise(
+    across(
+      .cols = c(height, mass), 
+      .fns = list(mean = ~mean(.x, na.rm = TRUE)), # avarege, NA ignored
+      .names = "mean_{.col}"
+    ),
+    n = n(), # number of characters in the grou
+    .groups = "drop" # drop groupind after "summarise"
+  ) |>
+  
+  filter(n > 1) |>
+  
+  arrange(desc(n))
+
+print("--- Task 3 result ---")
+print(task3_result)
+
+```
+
+#### Завдання 4: Перейменування та реструктуризація ---
+
+Взяти результат попереднього пункту (task3_result).
+1.
+Перейменувати species на Раса.
+2.
+Перемістити стовпець n на перше місце.
+3.
+Перетворити назви всіх інших стовпців на ВЕРХНІЙ РЕГІСТР.
+
+```{r}
+task4_result <- task3_result |>
+  rename(Раса = species) |>
+  
+  relocate(n) |>
+  
+  rename_with(
+    .fn = toupper, 
+  )
+
+print("--- Task 4 result ---")
+print(task4_result)
+```

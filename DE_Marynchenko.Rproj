@@ -1,0 +1,23 @@
+Version: 1.0
+
+RestoreWorkspace: Default
+SaveWorkspace: Ask
+AlwaysSaveHistory: Yes
+
+EnableCodeIndexing: Yes
+UseSpacesForTab: Yes
+NumSpacesForTab: 4
+Encoding: UTF-8
+
+RnwWeave: Sweave
+LaTeX: pdfLaTeX
+
+UseNativePipeOperator: Yes
+
+PythonType: system
+PythonVersion: 3.13.1
+PythonPath: C:/Users/vlerk/AppData/Local/Programs/Python/Python313/python.exe
+
+SpellingDictionary: en_US
+
+ProjectName: DE_Marynchenko
