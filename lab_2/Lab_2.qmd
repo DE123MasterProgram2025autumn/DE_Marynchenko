@@ -82,9 +82,14 @@ editor:
 # Зазавантаження даних у R
 # ІНсталяція пакетів
 # install.packages("vroom")
+```
+
+
+
+```{r}
 # install.packages("readxl")
 # install.packages("devtools")
-# devtools::install_github("tidyverse/googlesheets4")
+devtools::install_github("tidyverse/googlesheets4", force = TRUE)
 
 # ###########################################
 # підключення пакетів
@@ -101,7 +106,7 @@ library("vroom")
 getwd()
 
 ## читання локальних файлів
-# ga_data <- vroom(file = "data/ga_nowember.csv", delim = "/t")
+ga_data <- vroom(file = "data/ga_nowember.csv", delim = "/t")
 ga_data <- vroom(file = "data/ga_nowember.csv")
 ga_data_2 <- vroom(file = "data/ga_december.csv")
 
@@ -110,10 +115,10 @@ ga_data_2 <- vroom(file = "data/ga_december.csv")
 ga_data_i <- vroom("https://raw.githubusercontent.com/selesnow/publications/master/data_example/russian_text_in_r/ga_nowember.csv")
 
 ## читання декількох файлів в одну таблицю
-files <- dir(path = "data", pattern = "\\.csv$")
-ga_full <- vroom(files, delim = "\t") 
+files <- dir(path = "data", pattern = "\\data/.csv$")
+ga_full <- vroom(files, delim = "\t")
 
-# View(ga_full)
+View(ga_full)
 
 
 # ###########################################
@@ -126,6 +131,7 @@ excel_sheets("data/ga_examples.xlsx")
 ## зчитати дані з листа
 xl_dec <- read_excel("data/ga_examples.xlsx", sheet = "dec")
 
+
 # ###########################################
 # Читання Google Таблиць
 library(googlesheets4)
@@ -134,20 +140,20 @@ library(googlesheets4)
 # Актуальний синтаксис див. тут: https://googlesheets4.tidyverse.org/reference/index.html#section-auth
 
 ## Авторизація НЕПРАВИЛЬНА!
-sheets_auth(email = "vnsidorenko@gmail.com")
-sheets_find()
+##sheets_auth(email = "vlerkalerka@gmail.com")
+#sheets_find()
 
 # ПРАВИЛЬНА
-gs4_auth(email = "vnsidorenko@gmail.com")
-# gs4_deauth()
+gs4_auth(email = "vlerkalerka@gmail.com")
+gs4_deauth()
 gs4_find()
 
 ## Підключення до доксу
 ss_id <- as_sheets_id("1xu_beKZVpJJTHTvAab_vN3ZiMB03BytKArGjJUO8cck")
-# ss_id <- as_sheets_id("1ucz62sENkrkSEzMNXFVdQbIVHB0ZQw66")
+ss_id <- as_sheets_id("1ucz62sENkrkSEzMNXFVdQbIVHB0ZQw66")
 
 # альтернативний варіант
-read_sheet("https://docs.google.com/spreadsheets/d/1U6Cf_qEOhiR9AZqTqS3mbMF3zt2db48ZP5v3rkrAEJY/edit#gid=780868077")
+read_sheet("https://docs.google.com/spreadsheets/d/1U6Cf_qEOhiR9AZqTqS3mbMF3zt2db48ZP5v3rkrAEJY/edit?gid=780868077#gid=780868077")
 
 ## відкрити докс у браузері
 gs4_browse(ss_id)
@@ -156,6 +162,7 @@ gs4_browse(ss_id)
 sheet_names(ss_id)
 
 ## отримати дані з листа
+
 gs_ga_data <- sheets_read(ss = ss_id, 
                           sheet = "dec")
 
@@ -216,18 +223,73 @@ gs_ga_data <- sheets_read(ss = ss,
  - Завантажте обидва Excel-файли, прочитайте всі аркуші з продажами.
 
  - Завантажте `customers.csv` за допомогою `vroom`.
+ 
+```{r}
 
+sales_q1 <- lapply(
+  c("sales_jan", "sales_feb", "sales_mar"),
+  function(sheet_name) {
+    read_excel(path = "data/sales_q1.xlsx", sheet = sheet_name)
+  }
+)
+    
+sales_q2 <- lapply(
+  c("sales_apr", "sales_may", "sales_jun"),
+  function(sheet_name) {
+    read_excel(path = "data/sales_q2.xlsx", sheet = sheet_name)
+  }
+)
+customers <- vroom("data/customers.csv")
+```
 2. **Вертикальне об’єднання**
 
  - Об’єднайте всі 6 таблиць продажів (`jan`–`jun`) у єдину таблицю `all_sales`.
 
  - Додайте стовпець `month` з назвою місяця (наприклад, `"2024-01"`).
+```{r}
 
+library(dplyr)
+library(purrr)
+
+all_sales <- c(
+    # Присвоюємо імена елементам списків
+    sales_q1 %>% set_names(c("sales_jan", "sales_feb", "sales_mar")),
+    sales_q2 %>% set_names(c("sales_apr", "sales_may", "sales_jun"))
+  ) |>
+  # Об'єднуємо всі таблиці, створюючи стовпець "month" з імен списків
+  dplyr::bind_rows(.id = "month") |>
+  # Перетворюємо назви місяців
+  dplyr::mutate(
+    month = dplyr::case_match(month, 
+      "sales_jan" ~ "2025-01",
+      "sales_feb" ~ "2025-02",
+      "sales_mar" ~ "2025-03",
+      "sales_apr" ~ "2025-04",
+      "sales_may" ~ "2025-05",
+      "sales_jun" ~ "2025-06",
+      .default = month
+    )
+  )
+
+```
+ 
+ 
 3. **Горизонтальне об’єднання**
 
  - Додайте до `all_sales` інформацію про товари (`product_name`, `category`) через `left_join`.
 
  - Додайте інформацію про клієнтів (`region`, `customer_type`) через `left_join`.
+```{r}
+products_q1 <- read_excel("data/sales_q1.xlsx", sheet = "products")
+all_sales_joined <- all_sales |>
+  dplyr::left_join(products_q1, by = "product_id") |>
+  dplyr::left_join(customers, by = "customer_id") |>
+  dplyr::relocate(product_name, category, .after = product_id) |>
+  dplyr::relocate(region, customer_type, .after = customer_id)
+
+print(all_sales_joined)
+
+```
 
 4. **Агрегація та аналіз**
 
@@ -240,13 +302,53 @@ gs_ga_data <- sheets_read(ss = ss,
  - кількість унікальних клієнтів,
 
  - середній чек (`revenue / кількість замовлень`).
+ 
+```{r}
+analysis_results <- all_sales_joined |>
+  dplyr::mutate(revenue = quantity * price_per_unit) |>
+  dplyr::group_by(month, region) |>
+  dplyr::summarise(
+    total_revenue = sum(revenue),
+    unique_customers = dplyr::n_distinct(customer_id),
+    total_orders = dplyr::n_distinct(order_id),
+    average_check = total_revenue / total_orders,
+    .groups = "drop"
+  ) |>
+  dplyr::rename_with(~ paste0("total_", .), total_revenue) |>
+  dplyr::rename_with(~ paste0("avg_", .), average_check)
+
+print(analysis_results)
+```
 
 5. **Фільтруюче з’єднання**
 
  - Визначте `customer_id`, які робили покупки **і в Q1, і в Q2** (використайте `semi_join`).
 
- - Визначте клієнтів, які **зникли після Q1** (були в Q1, але не в Q2) — використайте `anti_join`.
+```{r}
+q1_customers <- all_sales |> 
+    dplyr::filter(month %in% c("2025-01", "2025-02", "2025-03")) |>
+    dplyr::select(customer_id) |>
+    dplyr::distinct()
 
+q2_customers <- all_sales |> 
+    dplyr::filter(month %in% c("2025-04", "2025-05", "2025-06")) |>
+    dplyr::select(customer_id) |>
+    dplyr::distinct()
+
+customers_q1_and_q2 <- q1_customers |>
+  dplyr::semi_join(q2_customers, by = "customer_id")
+
+print(customers_q1_and_q2)
+```
+ - Визначте клієнтів, які **зникли після Q1** (були в Q1, але не в Q2) — використайте `anti_join`.
+ 
+```{r}
+customers_disappeared_after_q1 <- q1_customers |>
+  #in q1_customers BUT NOT in q2_customers
+  dplyr::anti_join(q2_customers, by = "customer_id")
+
+print(customers_disappeared_after_q1)
+```
 ---
 
 ### Технічні вимоги:
