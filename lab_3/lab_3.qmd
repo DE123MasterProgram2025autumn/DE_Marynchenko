@@ -1,0 +1,362 @@
+---
+title: "Лабораторна робота №3:Робота зі структурованими даними, перетворення форматів та віконні операції"
+subtitle: "Інженерія даних | КрНУ ім. М. Остроградського"
+author: "[Сидоренко Валерій](https://www.linkedin.com/in/valeriy-sydorenko-6782279a/)"
+date: last-modified
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    sidebar: left
+    collapse-level: 2
+    code-fold: true
+    code-overflow: wrap
+    page-layout: full
+#     include-in-footer:
+#       text: |
+#         <hr>
+#         <footer style="text-align: center; font-size: 0.9em; color: #666;">
+#           <p>Виконав(ла): <strong>Маринченко Валерія Віталіївна</strong> | Група: <strong>КІ-24-1-м</strong> | Викладач: Сидоренко В.М.</p>
+#           <p>Кременчуцький національний університет імені Михайла Остроградського &copy; 2025</p>
+#         </footer>
+# editor: visual
+editor: visual
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Мета роботи
+
+Освоїти сучасні методи обробки неструктурованих та напівструктурованих даних (JSON), навчитися перетворювати формати таблиць (широкий ↔ довгий) за допомогою tidyr, а також застосовувати віконні функції для аналізу даних у контексті груп (наприклад, часових рядів, відділів, регіонів). Ці навички є ключовими для підготовки даних у складних ETL-процесах.
+
+## Що ви будете вміти після виконання роботи?
+
+-   Парсити **JSON-дані** різної складності за допомогою `jsonlite` та `tidyr`.\
+-   працювати з **вкладеними структурами** за допомогою `hoist()`, `unnest_wider()`, `unnest_longer()`.\
+-   перетворювати дані з **широкого формату в довгий** (`pivot_longer()`) та **навпаки** (`pivot_wider()`).\
+-   Використовувати **специфікації** (`build_wider_spec()`) для стандартизації перетворень.\
+-   Застосовувати **віконні функції** для:\
+     – агрегації в межах груп (`sum()`, `mean()`),\
+     – ранжування (`min_rank()`, `dense_rank()`),\
+     – аналізу змін у часі (`lag()`, `lead()`),\
+     – накопичувальних розрахунків (`cumsum()`).\
+-   Будувати **складні конвеєри обробки даних** у функціональному стилі з використанням `dplyr` та `tidyr`.
+
+------------------------------------------------------------------------
+
+## Вступ
+
+У реальному світі інженерії даних вихідні дані часто надходять у **нестандартних форматах**: JSON з веб-API, XML зі старих систем, або таблиці у «широкому» форматі (наприклад, Excel-звіти з місяцями у стовпцях). Крім того, аналіз часто вимагає не просто агрегації, а **порівняння значень у контексті групи** — наприклад, зарплата співробітника відносно середньої по відділу, або зміна продажів відносно попереднього місяця.
+
+Ця лабораторна робота охоплює **три критичні аспекти підготовки даних**:
+
+1.  **Робота з JSON** — ви навчитеся «розгортати» вкладені структури, витягувати потрібні поля та фільтрувати дані на основі вкладених атрибутів.
+2.  **Перетворення форматів** — ви освоїте сучасний підхід `tidyr` (`pivot_*`), який замінив застарілі `gather()`/`spread()`, і дозволяє гнучко керувати структурою даних.
+3.  **Віконні операції** — ви навчитеся виконувати розрахунки, які враховують **контекст групи**, без руйнування структури датафрейму.
+
+Ці навички дозволяють перетворювати «брудні», неструктуровані дані в **аналітично придатний формат**, готовий до візуалізації, моделювання або завантаження в звітні системи.
+
+Розглянемо окремо кожен з цих аспектів.
+
+## Робота з JSON
+
+У сучасних ETL-процесах дані часто надходять у форматі **JSON** — з веб-API, мобільних додатків, лог-файлів або NoSQL-баз. У R для роботи з JSON використовуються пакети `jsonlite` (для парсингу) та `tidyr` (для розгортання вкладених структур).
+
+Ключові операції: - `read_json()` — читання JSON-файлу або URL. - `unnest_wider()` — перетворення елементів списку на окремі стовпці (коли кожен об’єкт має однакову структуру). - `unnest_longer()` — перетворення списку на довгий формат (кожен елемент стає окремим рядком). - `hoist()` — витягування конкретних полів з вкладених об’єктів без повного розгортання.
+
+Ці інструменти дозволяють перетворювати **глибоко вкладені, неоднорідні JSON-структури** на плоский, аналітично придатний `tibble`, що є критичним етапом у підготовці даних для подальшого аналізу чи завантаження в звітні системи.
+
+### Робоче завдання 1
+
+Опрацювано [частину 1](lab3_DE_2022__part1.R), [частину 2](lab3_DE_2022__part2.R), [частину 3](lab3_DE_2022__part3.R) та [частину 4.](lab3_DE_2022__part3_add.R)
+
+## Робоче завдання
+
+-   Виконано [Індивідуальне завдання](#варіанти-індивідуальних-завдань)
+
+## Варіант 1
+
+Відсутні датасети заданої структури згенерувати самостійно.
+
+### **Тема: Аналіз даних про працівників компанії (JSON → перетворення формату → віконні операції)**
+
+Ви отримали дані про співробітників компанії у форматі **JSON**, а також **Excel-звіти** з щомісячними бонусами та штрафами. Ваше завдання — побудувати ETL-конвеєр для аналізу зарплатної політики.
+
+------------------------------------------------------------------------
+
+### Джерела даних
+
+1.  **`hard_data.json`** — містить інформацію про співробітників:
+
+    ``` json
+    {
+      "id": 101,
+      "name": "Олена Петренко",
+      "department": "IT",
+      "base_salary": 25000,
+      "skills": {
+        "languages": ["R", "Python"],
+        "tools": ["Git", "Docker"]
+      }
+    }
+    ```
+
+    > Файл доступний за посиланням (це базовий, можна згенерувати власний):\
+    > <https://raw.githubusercontent.com/selesnow/r4excel_users/master/lesson_10/hard_data.json>
+
+2.  **`bonuses_q1.xlsx`** — Excel-файл з аркушами:
+
+    -   `jan`, `feb`, `mar` — стовпці: `employee_id`, `bonus_amount`\
+
+3.  **`penalties_q1.xlsx`** — аналогічна структура для штрафів.
+
+------------------------------------------------------------------------
+
+### Завдання
+
+#### **Етап 1: Робота з JSON**
+
+-   Завантажте `hard_data.json` за допомогою `jsonlite::read_json()`.
+-   Перетворіть у `tibble`.
+-   Виділіть з вкладеної структури:
+    -   `name`, `department`, `base_salary`
+    -   кількість мов програмування (`n_langs`) з поля `skills$language`
+-   Залиште лише тих співробітників, які знають **мову R**.
+
+```{r}
+emp_json_data <- jsonlite::read_json("data/hard_data.json", simplifyVector = TRUE)
+
+emp_json_data <- tibble::tribble(
+  ~id, ~name, ~department, ~base_salary, ~skills,
+  101, "Олена Петренко", "IT", 25000, list(languages = list("R", "Python"), tools = list("Git", "Docker")),
+  102, "Іван Ковальчук", "Sales", 18000, list(languages = list("SQL", "Excel"), tools = list("CRM")),
+  103, "Марія Сидоренко", "IT", 28000, list(languages = list("R", "Julia", "Python"), tools = list("Docker")),
+  104, "Петро Іванов", "Marketing", 20000, list(languages = list("Python"), tools = list("SocialMedia"))
+) %>%
+  rowwise() %>%
+  mutate(skills = list(skills)) %>%
+  ungroup()
+
+employees_df <- emp_json_data %>%
+  # Розгортаємо вкладену колонку 'skills'
+  # unnest_wider розгортає список колонок у новий набір колонок
+  tidyr::unnest_wider(skills) %>%
+  # Розгортаємо колонку 'languages' у список і створюємо тимчасовий стовпець
+  tidyr::unnest_longer(languages, values_to = "lang") %>%
+  # Обчислюємо кількість мов, групуючи за ID
+  group_by(id, name, department, base_salary, tools) %>%
+  mutate(n_langs = n_distinct(lang)) %>%
+  ungroup() %>%
+  # Фільтруємо: залишаємо лише тих, хто знає R
+  filter(lang == "R") %>%
+  # Залишаємо унікальні рядки, оскільки ми більше не потребуємо lang для фільтрації
+  distinct(id, name, department, base_salary, n_langs) %>%
+  # Перейменовуємо 'id' на 'employee_id' для подальшого об'єднання
+  rename(employee_id = id)
+
+cat("Співробітники, які знають R:\n")
+print(employees_df)
+
+```
+
+#### **Етап 2: Перетворення форматів**
+
+-   Завантажте всі аркуші з `bonuses_q1.xlsx` та `penalties_q1.xlsx`.
+-   Об’єднайте їх у дві таблиці: `bonuses_long` та `penalties_long`, додавши стовпець `month` (значення: `"2024-01"`, `"2024-02"`, `"2024-03"`).
+-   Перетворіть обидві таблиці з «широкого» у «довгий» формат за допомогою `pivot_longer()` (якщо потрібно) або `bind_rows()`.
+
+```{r}
+# Функція для об'єднання списку таблиць і додавання стовпця month
+bind_and_format <- function(data_list, year = 2024, prefix = "sales_") {
+  data_list %>%
+    # Присвоюємо імена елементам списку для bind_rows
+    purrr::set_names(c("jan", "feb", "mar")) %>%
+    # Вертикальне об'єднання, створення стовпця 'month'
+    bind_rows(.id = "month") %>%
+    # Форматування стовпця 'month'
+    mutate(
+      month = case_match(month,
+        "jan" ~ paste0(year, "-01"),
+        "feb" ~ paste0(year, "-02"),
+        "mar" ~ paste0(year, "-03"),
+        .default = month
+      )
+    )
+}
+q1_months <- c("jan", "feb", "mar")
+ids <- c(101, 103, 104, 101, 102, 103)
+# Бонуси
+bonuses_q1 <- list(
+  jan = tibble(employee_id = ids[1:3], bonus_amount = c(2500, 1000, 500)),
+  feb = tibble(employee_id = ids[4:6], bonus_amount = c(3000, 500, 1500)),
+  mar = tibble(employee_id = c(101, 103), bonus_amount = c(2000, 2000))
+)
+# Штрафи
+penalties_q1 <- list(
+  jan = tibble(employee_id = ids[4:6], penalty_amount = c(0, 500, 0)),
+  feb = tibble(employee_id = c(102, 104), penalty_amount = c(100, 300)),
+  mar = tibble(employee_id = ids[1:3], penalty_amount = c(200, 0, 100))
+)
+
+bonuses_long <- bind_and_format(bonuses_q1)
+penalties_long <- bind_and_format(penalties_q1)
+
+cat("\nБонуси у 'довгому' форматі (перші 5 рядків):\n")
+print(head(bonuses_long, 5))
+
+cat("\nШтрафи у 'довгому' форматі (перші 5 рядків):\n")
+
+
+print(head(penalties_long, 5))
+
+```
+
+#### **Етап 3: Об’єднання та віконні операції**
+
+-   Об’єднайте дані про співробітників з бонусами та штрафами за `id` = `employee_id` та `month`.
+-   Розрахуйте **фактичну зарплату**:\
+    `total_salary = base_salary + bonus_amount - penalty_amount`\
+    (пропущені значення замініть на 0).
+-   Для кожного місяця виконайте:
+    -   **Ранжування**: визначте співробітника з **найвищою часткою бонусу** від базової зарплати (`bonus_rate = bonus_amount / base_salary`).
+    -   **Зсув**: розрахуйте **зміну зарплати відносно попереднього місяця** (`salary_change = (total_salary - lag(total_salary)) / lag(total_salary)`).
+    -   **Накопичення**: обчисліть **накопичену зарплату** з початку кварталу (`cum_salary = cumsum(total_salary)`).
+
+```{r}
+employees_df <- emp_json_data %>%
+  # Розгортаємо вкладену колонку 'skills'
+  # unnest_wider розгортає список колонок у новий набір колонок
+  tidyr::unnest_wider(skills) %>%
+  # Розгортаємо колонку 'languages' у список і створюємо тимчасовий стовпець
+  tidyr::unnest_longer(languages, values_to = "lang") %>%
+  # Обчислюємо кількість мов, групуючи за ID
+  group_by(id, name, department, base_salary, tools) %>%
+  mutate(n_langs = n_distinct(lang)) %>%
+  ungroup() %>%
+  # Фільтруємо: залишаємо лише тих, хто знає R
+  filter(lang == "R") %>%
+  # Залишаємо унікальні рядки, оскільки ми більше не потребуємо lang для фільтрації
+  distinct(id, name, department, base_salary, n_langs) %>%
+  # Перейменовуємо 'id' на 'employee_id' для подальшого об'єднання
+  rename(employee_id = id)
+
+cat("Співробітники, які знають R:\n")
+print(employees_df)
+
+salary_analysis <- employees_df %>%
+  # Об'єднання з бонусами
+  left_join(bonuses_long, by = "employee_id") %>%
+  # Об'єднання зі штрафами за employee_id та month
+  full_join(penalties_long, by = c("employee_id", "month")) %>%
+  # Сортування для коректності віконних операцій (lag, cumsum)
+  arrange(employee_id, month) %>%
+  # Заміна NA на 0 у бонусах та штрафах (якщо не було, то 0)
+  mutate(
+    bonus_amount = replace_na(bonus_amount, 0),
+    penalty_amount = replace_na(penalty_amount, 0),
+    # Розрахунок фактичної зарплати
+    total_salary = base_salary + bonus_amount - penalty_amount
+  ) %>%
+  # Розрахунок віконних функцій (групуємо за співробітником)
+  group_by(employee_id) %>%
+  mutate(
+    # Ранжування (використовуємо min_rank для коректності)
+    bonus_rate = bonus_amount / base_salary,
+    rank_bonus_rate = min_rank(desc(bonus_rate)),
+    
+    # Зсув (зміна зарплати відносно попереднього місяця)
+    # lag(total_salary) повертає total_salary попереднього рядка в групі (попереднього місяця)
+    salary_change = (total_salary - lag(total_salary)) / lag(total_salary),
+    
+    # Накопичення (кумулятивна сума зарплати з початку кварталу)
+    cum_salary = cumsum(total_salary)
+  ) %>%
+  ungroup() %>%
+  # Обмежуємося співробітниками, які знають R (після об'єднання могли з'явитися NA, якщо не було продажів)
+  filter(!is.na(name)) 
+
+cat("\nРезультати аналізу та віконних операцій:\n")
+print(salary_analysis %>% select(name, month, base_salary, bonus_amount, penalty_amount, total_salary, rank_bonus_rate, salary_change, cum_salary))
+
+```
+
+#### **Етап 4: Аналіз**
+
+-   Виведіть список співробітників, які **отримували бонус кожного місяця** (використайте `semi_join`).
+-   Визначте, чи є зв’язок між **кількістю мов програмування** та **середнім бонусом**.
+
+```{r}
+# Створення довідника всіх місяців Q1
+all_months_q1 <- tibble(month = c("2024-01", "2024-02", "2024-03"))
+
+# Співробітники, які отримали бонус хоча б одного місяця
+employees_with_bonus <- bonuses_long %>%
+  distinct(employee_id, month)
+
+# Знаходимо employee_id, для яких є 3 записи у employees_with_bonus (один за кожен місяць Q1)
+employees_bonus_every_month <- employees_with_bonus %>%
+  # Об'єднуємо з all_months_q1, щоб переконатися, що у нас є повний набір місяців для кожного ID
+  group_by(employee_id) %>%
+  summarise(n_months = n_distinct(month), .groups = "drop") %>%
+  filter(n_months == 3)
+
+# Виводимо повний список цих співробітників
+employees_bonus_every_month_details <- employees_df %>%
+  semi_join(employees_bonus_every_month, by = "employee_id")
+
+cat("\nСпівробітники, які отримували бонус кожного місяця Q1:\n")
+print(employees_bonus_every_month_details)
+
+```
+
+```{r}
+# Групуємо за кількістю мов і обчислюємо середній бонус
+bonus_vs_n_langs <- salary_analysis %>%
+  # Фільтруємо, оскільки base_salary і n_langs не змінюються за місяцями
+  distinct(employee_id, base_salary, n_langs) %>%
+  # Об'єднуємо з усіма бонусами
+  left_join(bonuses_long, by = "employee_id") %>%
+  # Групуємо та агрегуємо
+  group_by(n_langs) %>%
+  summarise(
+    avg_bonus_per_employee = mean(bonus_amount, na.rm = TRUE),
+    n_employees = n_distinct(employee_id),
+    .groups = "drop"
+  )
+
+cat("\nЗв'язок між кількістю мов програмування та середнім бонусом:\n")
+print(bonus_vs_n_langs)
+
+# Перевірка на кореляцію
+correlation_check <- salary_analysis %>%
+  group_by(employee_id, n_langs) %>%
+  summarise(avg_bonus = mean(bonus_amount, na.rm = TRUE), .groups = "drop") %>%
+  # Обчислення кореляції між кількістю мов та середнім бонусом
+  summarise(
+    correlation = cor(n_langs, avg_bonus)
+  )
+
+cat(sprintf("\nКоефіцієнт кореляції між кількістю мов та середнім бонусом: %.2f\n", 
+            correlation_check$correlation))
+```
+------------------------------------------------------------------------
+
+### Технічні вимоги
+
+-   Використовуйте **конвеєрний синтаксис** (`%>%`).
+-   Для роботи з JSON — `hoist()`, `unnest_longer()`.
+-   Для перетворення форматів — `pivot_longer()`, `bind_rows()`, `separate()` (якщо потрібно).
+-   Для віконних операцій — `group_by()`, `mutate()`, `lag()`, `cumsum()`, `min_rank()`.
+-   Усі файли завантажуються з папки `data/` — забезпечте відтворюваність.
+
+```{=html}
+<hr style="border: 1px solid #ddd; margin: 30px 0 10px 0;">
+<footer style="text-align: center; font-size: 0.9em; color: #666; padding: 15px; background: #f9f9f9; border-top: 1px solid #eee; margin-top: 20px;">
+  <p><strong>Виконав(ла): Ваше ПІБ</strong> | Група: <strong>Ваша група</strong> | Викладач: Сидоренко В.М.</p>
+  <p>Кременчуцький національний університет імені Михайла Остроградського &copy; 2025</p>
+</footer>
+```
