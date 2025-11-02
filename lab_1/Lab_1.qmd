@@ -6,9 +6,6 @@ output:
   html:
     highlight: tango
     toc: yes
-        
-  #   highlight: tango
-  #   toc: yes
   html_notebook:
     toc: yes # генерація змісту документу
     toc_float: true
