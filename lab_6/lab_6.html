@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Сидоренко Валерій">
+<meta name="dcterms.date" content="2025-11-06">
+
+<title>Лабораторна робота №5: Ефективна робота з великими даними за допомогою пакета data.table</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="lab_6_files/libs/clipboard/clipboard.min.js"></script>
+<script src="lab_6_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="lab_6_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="lab_6_files/libs/quarto-html/popper.min.js"></script>
+<script src="lab_6_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="lab_6_files/libs/quarto-html/anchor.min.js"></script>
+<link href="lab_6_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="lab_6_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="lab_6_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="lab_6_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="lab_6_files/libs/bootstrap/bootstrap-fb20cf6cb377599d9fcbc751916eaf20.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-full toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#мета-роботи" id="toc-мета-роботи" class="nav-link active" data-scroll-target="#мета-роботи">Мета роботи</a></li>
+  <li><a href="#що-ви-будете-вміти-після-виконання-роботи" id="toc-що-ви-будете-вміти-після-виконання-роботи" class="nav-link" data-scroll-target="#що-ви-будете-вміти-після-виконання-роботи">Що ви будете вміти після виконання роботи?</a></li>
+  <li><a href="#вступ" id="toc-вступ" class="nav-link" data-scroll-target="#вступ">Вступ</a></li>
+  <li><a href="#синтаксис-dti-j-by-фільтрація-обчислення-та-групування" id="toc-синтаксис-dti-j-by-фільтрація-обчислення-та-групування" class="nav-link" data-scroll-target="#синтаксис-dti-j-by-фільтрація-обчислення-та-групування">Синтаксис <code>DT[i, j, by]</code>: фільтрація, обчислення та групування</a>
+  <ul class="collapse">
+  <li><a href="#переваги-синтаксису-dti-j-by" id="toc-переваги-синтаксису-dti-j-by" class="nav-link" data-scroll-target="#переваги-синтаксису-dti-j-by">✅ Переваги синтаксису <code>DT[i, j, by]</code>:</a></li>
+  </ul></li>
+  <li><a href="#швидка-агрегація-за-групами" id="toc-швидка-агрегація-за-групами" class="nav-link" data-scroll-target="#швидка-агрегація-за-групами">Швидка агрегація за групами</a>
+  <ul class="collapse">
+  <li><a href="#переваги-агрегації-в-data.table" id="toc-переваги-агрегації-в-data.table" class="nav-link" data-scroll-target="#переваги-агрегації-в-data.table">✅ Переваги агрегації в <code>data.table</code>:</a></li>
+  </ul></li>
+  <li><a href="#оновлення-даних-на-місці-by-reference" id="toc-оновлення-даних-на-місці-by-reference" class="nav-link" data-scroll-target="#оновлення-даних-на-місці-by-reference">Оновлення даних на місці (by reference)</a>
+  <ul class="collapse">
+  <li><a href="#переваги-оновлення-на-місці" id="toc-переваги-оновлення-на-місці" class="nav-link" data-scroll-target="#переваги-оновлення-на-місці">✅ Переваги оновлення на місці:</a></li>
+  </ul></li>
+  <li><a href="#злиття-таблиць-через-merge-та-ключі" id="toc-злиття-таблиць-через-merge-та-ключі" class="nav-link" data-scroll-target="#злиття-таблиць-через-merge-та-ключі">Злиття таблиць через <code>merge()</code> та ключі</a></li>
+  <li><a href="#перетворення-між-data.frame-та-data.table" id="toc-перетворення-між-data.frame-та-data.table" class="nav-link" data-scroll-target="#перетворення-між-data.frame-та-data.table">Перетворення між <code>data.frame</code> та <code>data.table</code></a></li>
+  <li><a href="#швидке-завантаження-великих-файлів-через-fread" id="toc-швидке-завантаження-великих-файлів-через-fread" class="nav-link" data-scroll-target="#швидке-завантаження-великих-файлів-через-fread">Швидке завантаження великих файлів через <code>fread()</code></a></li>
+  <li><a href="#інтеграція-data.table-у-функціональні-конвеєри" id="toc-інтеграція-data.table-у-функціональні-конвеєри" class="nav-link" data-scroll-target="#інтеграція-data.table-у-функціональні-конвеєри">Інтеграція <code>data.table</code> у функціональні конвеєри</a></li>
+  <li><a href="#робоче-завдання" id="toc-робоче-завдання" class="nav-link" data-scroll-target="#робоче-завдання">Робоче завдання</a>
+  <ul class="collapse">
+  <li><a href="#варіанти-індивідуальних-завдань" id="toc-варіанти-індивідуальних-завдань" class="nav-link" data-scroll-target="#варіанти-індивідуальних-завдань">Варіанти індивідуальних завдань</a></li>
+  </ul></li>
+  <li><a href="#варіант-1" id="toc-варіант-1" class="nav-link" data-scroll-target="#варіант-1">Варіант 1</a>
+  <ul class="collapse">
+  <li><a href="#тема-аналіз-ефективності-авіаперевезень-за-2014-рік" id="toc-тема-аналіз-ефективності-авіаперевезень-за-2014-рік" class="nav-link" data-scroll-target="#тема-аналіз-ефективності-авіаперевезень-за-2014-рік"><strong>Тема: Аналіз ефективності авіаперевезень за 2014 рік</strong></a></li>
+  <li><a href="#завдання" id="toc-завдання" class="nav-link" data-scroll-target="#завдання">📌 Завдання</a></li>
+  <li><a href="#технічні-вимоги" id="toc-технічні-вимоги" class="nav-link" data-scroll-target="#технічні-вимоги">💡 Технічні вимоги</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content column-page-right" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Лабораторна робота №5: Ефективна робота з великими даними за допомогою пакета data.table</h1>
+<p class="subtitle lead">Інженерія даних | КрНУ ім. М. Остроградського</p>
+</div>
+
+
+
+<div class="quarto-title-meta column-page-right">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://www.linkedin.com/in/valeriy-sydorenko-6782279a/">Сидоренко Валерій</a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 6, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="мета-роботи" class="level2">
+<h2 class="anchored" data-anchor-id="мета-роботи">Мета роботи</h2>
+<p>Освоїти сучасний інструмент для роботи з великими обсягами даних у R — пакет <code>data.table</code>. Навчитися виконувати <strong>швидкі, пам’ять-ефективні операції</strong> над мільйонами рядків: фільтрацію, агрегацію, оновлення, злиття — з використанням <strong>унікального синтаксису <code>DT[i, j, by]</code></strong>. Зрозуміти, чому <code>data.table</code> є ключовим інструментом інженера даних при роботі з великими даними.</p>
+</section>
+<section id="що-ви-будете-вміти-після-виконання-роботи" class="level2">
+<h2 class="anchored" data-anchor-id="що-ви-будете-вміти-після-виконання-роботи">Що ви будете вміти після виконання роботи?</h2>
+<p>✅ Використовувати <strong>синтаксис <code>DT[i, j, by]</code></strong> для фільтрації (<code>i</code>), обчислення (<code>j</code>) та групування (<code>by</code>).<br>
+✅ Виконувати <strong>агрегацію та підсумовування</strong> за групами зі швидкістю, яка перевершує <code>dplyr</code> у 10–100 разів.<br>
+✅ Оновлювати дані <strong>на місці (by reference)</strong> без створення копій — що критично для економії пам’яті.<br>
+✅ Виконувати <strong>злиття таблиць (<code>merge</code>)</strong> з використанням <code>on =</code> або <code>key</code>.<br>
+✅ Перетворювати <code>data.frame</code> у <code>data.table</code> та навпаки без втрати продуктивності.<br>
+✅ Працювати з <strong>великими файлами</strong> (CSV, TSV) напряму через <code>fread()</code> — швидше за <code>vroom</code> у деяких сценаріях.<br>
+✅ Інтегрувати <code>data.table</code> у <strong>функціональні конвеєри</strong>, зберігаючи читабельність та ефективність.</p>
+<p>Див. <span class="citation" data-cites="datatable2025">[@datatable2025]</span></p>
+</section>
+<section id="вступ" class="level2">
+<h2 class="anchored" data-anchor-id="вступ">Вступ</h2>
+<p>У світі інженерії даних часто доводиться працювати з обсягами, які <strong>перевищують оперативну пам’ять</strong> або містять <strong>мільйони/мільярди рядків</strong>. У таких умовах навіть найелегантніший код на <code>dplyr</code> стає повільним і ресурсоємним.</p>
+<p>Пакет <code>data.table</code> — це <strong>оптимізована альтернатива</strong> для таких завдань. Він поєднує:<br>
+- <strong>Швидкість C-реалізації</strong> (багато операцій виконуються за <span class="math inline">\(O(1)\)</span> або <span class="math inline">\(O(log n))\)</span><br>
+- <strong>Ефективне використання пам’яті</strong> (оновлення на місці, lazy evaluation)<br>
+- <strong>Компактний синтаксис</strong> (<code>DT[i, j, by]</code> замість довгих конвеєрів).</p>
+<p>На відміну від <code>dplyr</code>, який орієнтований на <strong>читабельність</strong>, <code>data.table</code> орієнтований на <strong>продуктивність та масштабованість</strong> — саме те, що потрібно інженеру даних.</p>
+<p>Ця лабораторна робота знайомить вас із:</p>
+<ul>
+<li><p>базовим синтаксисом <code>data.table</code></p></li>
+<li><p>фільтрацією, агрегацією, оновленням</p></li>
+<li><p>злиттям таблиць</p></li>
+<li><p>завантаженням великих файлів через <code>fread()</code>.</p></li>
+</ul>
+<p>Ми навчимося <strong>робити те саме, що й у <code>dplyr</code></strong>, але <strong>значно швидше і з меншим споживанням пам’яті</strong> — що є критичним у production-середовищах.</p>
+</section>
+<section id="синтаксис-dti-j-by-фільтрація-обчислення-та-групування" class="level2">
+<h2 class="anchored" data-anchor-id="синтаксис-dti-j-by-фільтрація-обчислення-та-групування">Синтаксис <code>DT[i, j, by]</code>: фільтрація, обчислення та групування</h2>
+<p>Пакет <code>data.table</code> вводить компактний і швидкий синтаксис <code>DT[i, j, by]</code>, який об’єднує три ключові операції в одному виразі:</p>
+<ul>
+<li><p><strong><code>i</code></strong> — умова <strong>фільтрації рядків</strong> (аналог <code>filter()</code> у <code>dplyr</code>);</p></li>
+<li><p><strong><code>j</code></strong> — вираз для <strong>обчислення нових стовпців</strong> або <strong>вибору існуючих</strong> (аналог <code>select()</code>/<code>mutate()</code>);</p></li>
+<li><p><strong><code>by</code></strong> — змінні для <strong>групування</strong> (аналог <code>group_by()</code>).</p></li>
+</ul>
+<section id="приклад-1-фільтрація-i" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-1-фільтрація-i">🔹 Приклад 1: Фільтрація (<code>i</code>)</h4>
+<p>Завантажимо дані:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>input <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="st">"flights14.csv"</span>)) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"flights14.csv"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>flights <span class="ot">&lt;-</span> <span class="fu">fread</span>(input)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Тепер знайдемо всі рейси авіакомпанії <code>"AA"</code> (American Airlines):</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>flights[carrier <span class="sc">==</span> <span class="st">"AA"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>        year month   day dep_delay arr_delay carrier origin   dest air_time
+       &lt;int&gt; &lt;int&gt; &lt;int&gt;     &lt;int&gt;     &lt;int&gt;  &lt;char&gt; &lt;char&gt; &lt;char&gt;    &lt;int&gt;
+    1:  2014     1     1        14        13      AA    JFK    LAX      359
+    2:  2014     1     1        -3        13      AA    JFK    LAX      363
+    3:  2014     1     1         2         9      AA    JFK    LAX      351
+    4:  2014     1     1        -8       -26      AA    LGA    PBI      157
+    5:  2014     1     1         2         1      AA    JFK    LAX      350
+   ---                                                                     
+26298:  2014    10    31        -2       -16      AA    LGA    MIA      156
+26299:  2014    10    31        -4       -16      AA    EWR    DFW      192
+26300:  2014    10    31        -4        -7      AA    JFK    MCO      135
+26301:  2014    10    31        29         4      AA    JFK    MIA      146
+26302:  2014    10    31        -3        -2      AA    JFK    DCA       51
+       distance  hour
+          &lt;int&gt; &lt;int&gt;
+    1:     2475     9
+    2:     2475    11
+    3:     2475    19
+    4:     1035     7
+    5:     2475    13
+   ---               
+26298:     1096    19
+26299:     1372    16
+26300:      944     6
+26301:     1089    19
+26302:      213    15</code></pre>
+</div>
+</div>
+<p>Це еквівалентно <code>dplyr::filter(flights, carrier == "AA")</code>, але виконується <strong>значно швидше</strong>, оскільки <code>data.table</code> використовує <strong>індексацію</strong> та <strong>оптимізований C-код</strong>.</p>
+</section>
+<section id="приклад-2-обчислення-j" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-2-обчислення-j">🔹 Приклад 2: Обчислення (<code>j</code>)</h4>
+<p>Виберемо лише стовпці <code>origin</code>, <code>dest</code>, <code>dep_delay</code> та обчислимо новий стовпець — <strong>загальну тривалість польоту в хвилинах</strong>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>flights[, .(origin, dest, dep_delay, <span class="at">total_time =</span> air_time <span class="sc">+</span> dep_delay)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>        origin   dest dep_delay total_time
+        &lt;char&gt; &lt;char&gt;     &lt;int&gt;      &lt;int&gt;
+     1:    JFK    LAX        14        373
+     2:    JFK    LAX        -3        360
+     3:    JFK    LAX         2        353
+     4:    LGA    PBI        -8        149
+     5:    JFK    LAX         2        352
+    ---                                   
+253312:    LGA    IAH         1        202
+253313:    EWR    IAH        -5        184
+253314:    LGA    RDU        -8         75
+253315:    LGA    DTW        -4         71
+253316:    LGA    SDF        -5        105</code></pre>
+</div>
+</div>
+<p>Тут:</p>
+<ul>
+<li><p><code>.()</code> — скорочення для <code>list()</code>, яке створює новий <code>data.table</code>;</p></li>
+<li><p><code>total_time</code> — новий стовпець, обчислений на льоту.</p></li>
+</ul>
+<p>Це замінює комбінацію <code>select()</code> + <code>mutate()</code> у <code>dplyr</code>.</p>
+</section>
+<section id="приклад-3-групування-by" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-3-групування-by">🔹 Приклад 3: Групування (<code>by</code>)</h4>
+<p>Обчислимо <strong>середнє запізнення вильоту</strong> (<code>dep_delay</code>) за кожною авіакомпанією:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>flights[, .(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), by <span class="ot">=</span> carrier]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    carrier avg_delay
+     &lt;char&gt;     &lt;num&gt;
+ 1:      AA  8.510532
+ 2:      AS  8.831010
+ 3:      B6 11.991007
+ 4:      DL 12.209798
+ 5:      EV 17.561290
+ 6:      F9 24.712474
+ 7:      FL 20.596323
+ 8:      HA  8.488462
+ 9:      MQ  8.059324
+10:      VX 10.375860
+11:      WN 18.931524
+12:      UA 14.296086
+13:      US  3.516000
+14:      OO 12.575000</code></pre>
+</div>
+</div>
+<p>Результат — таблиця з двома стовпцями: <code>carrier</code> та <code>avg_delay</code>.</p>
+<p>Можна групувати за <strong>кількома змінними</strong>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>flights[, .(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), by <span class="ot">=</span> .(carrier, origin)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    carrier origin avg_delay
+     &lt;char&gt; &lt;char&gt;     &lt;num&gt;
+ 1:      AA    JFK  9.654953
+ 2:      AA    LGA  6.255840
+ 3:      AA    EWR 13.343526
+ 4:      AS    EWR  8.831010
+ 5:      B6    JFK 12.291613
+ 6:      B6    EWR 10.267860
+ 7:      B6    LGA 11.812160
+ 8:      DL    LGA 11.350830
+ 9:      DL    EWR 14.961714
+10:      DL    JFK 12.454136
+11:      EV    EWR 17.194154
+12:      EV    LGA 18.327672
+13:      F9    LGA 24.712474
+14:      FL    LGA 20.596323
+15:      HA    JFK  8.488462
+16:      MQ    LGA  7.458140
+17:      MQ    JFK  9.234019
+18:      VX    JFK  9.591460
+19:      VX    EWR 12.024939
+20:      WN    EWR 19.768463
+21:      WN    LGA 18.364482
+22:      MQ    EWR 16.377246
+23:      EV    JFK 19.818522
+24:      UA    EWR 15.124516
+25:      UA    LGA 13.080881
+26:      UA    JFK  8.595566
+27:      US    EWR  5.703736
+28:      US    JFK  9.284688
+29:      US    LGA  1.363388
+30:      OO    LGA 12.592965
+31:      OO    EWR  9.000000
+32:      VX    LGA -6.266667
+    carrier origin avg_delay</code></pre>
+</div>
+</div>
+</section>
+<section id="комбінований-приклад" class="level4">
+<h4 class="anchored" data-anchor-id="комбінований-приклад">🔹 Комбінований приклад</h4>
+<p>Знайдемо <strong>максимальне запізнення прибуття</strong> (<code>arr_delay</code>) для кожного аеропорту вильоту (<code>origin</code>), але <strong>лише для рейсів з запізненням вильоту &gt; 60 хв</strong>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>flights[dep_delay <span class="sc">&gt;</span> <span class="dv">60</span>, .(<span class="at">max_arr_delay =</span> <span class="fu">max</span>(arr_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), by <span class="ot">=</span> origin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>   origin max_arr_delay
+   &lt;char&gt;         &lt;int&gt;
+1:    JFK          1223
+2:    EWR          1494
+3:    LGA           996</code></pre>
+</div>
+</div>
+<p>Тут:</p>
+<ul>
+<li><p><code>i = dep_delay &gt; 60</code> — фільтрація,</p></li>
+<li><p><code>j = .(max_arr_delay = ...)</code> — агрегація,</p></li>
+<li><p><code>by = origin</code> — групування.</p></li>
+</ul>
+<hr>
+</section>
+<section id="переваги-синтаксису-dti-j-by" class="level3">
+<h3 class="anchored" data-anchor-id="переваги-синтаксису-dti-j-by">✅ Переваги синтаксису <code>DT[i, j, by]</code>:</h3>
+<ul>
+<li><p><strong>Компактність</strong>: одна лінійка замість кількох у <code>dplyr</code>.</p></li>
+<li><p><strong>Швидкість</strong>: операції виконуються на C-рівні.</p></li>
+<li><p><strong>Читабельність</strong>: логіка “фільтруй → обчисли → групуй” відображена прямо в синтаксисі.</p></li>
+<li><p><strong>Ефективність пам’яті</strong>: немає проміжних копій даних.</p></li>
+</ul>
+<hr>
+<p>Цей підхід є <strong>основою інженерії даних у <code>data.table</code></strong> і дозволяє обробляти мільйони рядків за долі секунди — саме те, що потрібно в production-середовищі.</p>
+</section>
+</section>
+<section id="швидка-агрегація-за-групами" class="level2">
+<h2 class="anchored" data-anchor-id="швидка-агрегація-за-групами">Швидка агрегація за групами</h2>
+<p>У <code>data.table</code> агрегація за групами виконується <strong>значно швидше</strong>, ніж у <code>dplyr</code>, завдяки внутрішній оптимізації через <strong>хеш-таблиці</strong> та <strong>векторизовані функції</strong>. Синтаксис залишається компактним: групування задається у третьому аргументі <code>by</code>.</p>
+<section id="приклад-середнє-запізнення-вильоту-за-авіакомпанією" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-середнє-запізнення-вильоту-за-авіакомпанією">🔹 Приклад: середнє запізнення вильоту за авіакомпанією</h4>
+<p>Тепер обчислимо середнє запізнення вильоту (<code>dep_delay</code>) для кожної авіакомпанії (<code>carrier</code>):</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>flights[, .(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), by <span class="ot">=</span> carrier]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    carrier avg_delay
+     &lt;char&gt;     &lt;num&gt;
+ 1:      AA  8.510532
+ 2:      AS  8.831010
+ 3:      B6 11.991007
+ 4:      DL 12.209798
+ 5:      EV 17.561290
+ 6:      F9 24.712474
+ 7:      FL 20.596323
+ 8:      HA  8.488462
+ 9:      MQ  8.059324
+10:      VX 10.375860
+11:      WN 18.931524
+12:      UA 14.296086
+13:      US  3.516000
+14:      OO 12.575000</code></pre>
+</div>
+</div>
+<p>Результат — компактна таблиця з двома стовпцями: <code>carrier</code> та <code>avg_delay</code>.</p>
+</section>
+<section id="порівняння-з-dplyr" class="level4">
+<h4 class="anchored" data-anchor-id="порівняння-з-dplyr">🔹 Порівняння з <code>dplyr</code></h4>
+<p>Той самий результат у <code>dplyr</code>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>flights_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(flights)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>flights_df <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrier) <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 14 × 2
+   carrier avg_delay
+   &lt;chr&gt;       &lt;dbl&gt;
+ 1 AA           8.51
+ 2 AS           8.83
+ 3 B6          12.0 
+ 4 DL          12.2 
+ 5 EV          17.6 
+ 6 F9          24.7 
+ 7 FL          20.6 
+ 8 HA           8.49
+ 9 MQ           8.06
+10 OO          12.6 
+11 UA          14.3 
+12 US           3.52
+13 VX          10.4 
+14 WN          18.9 </code></pre>
+</div>
+</div>
+<p>Але <code>data.table</code>:</p>
+<ul>
+<li><p><strong>не створює проміжних копій</strong></p></li>
+<li><p><strong>виконується в 10–100 разів швидше</strong> на великих даних</p></li>
+<li><p><strong>використовує менше пам’яті</strong></p></li>
+</ul>
+</section>
+<section id="агрегація-за-кількома-змінними" class="level4">
+<h4 class="anchored" data-anchor-id="агрегація-за-кількома-змінними">🔹 Агрегація за кількома змінними</h4>
+<p>Можна групувати за декількома змінними:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>flights[, .(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), by <span class="ot">=</span> .(carrier, origin)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    carrier origin avg_delay
+     &lt;char&gt; &lt;char&gt;     &lt;num&gt;
+ 1:      AA    JFK  9.654953
+ 2:      AA    LGA  6.255840
+ 3:      AA    EWR 13.343526
+ 4:      AS    EWR  8.831010
+ 5:      B6    JFK 12.291613
+ 6:      B6    EWR 10.267860
+ 7:      B6    LGA 11.812160
+ 8:      DL    LGA 11.350830
+ 9:      DL    EWR 14.961714
+10:      DL    JFK 12.454136
+11:      EV    EWR 17.194154
+12:      EV    LGA 18.327672
+13:      F9    LGA 24.712474
+14:      FL    LGA 20.596323
+15:      HA    JFK  8.488462
+16:      MQ    LGA  7.458140
+17:      MQ    JFK  9.234019
+18:      VX    JFK  9.591460
+19:      VX    EWR 12.024939
+20:      WN    EWR 19.768463
+21:      WN    LGA 18.364482
+22:      MQ    EWR 16.377246
+23:      EV    JFK 19.818522
+24:      UA    EWR 15.124516
+25:      UA    LGA 13.080881
+26:      UA    JFK  8.595566
+27:      US    EWR  5.703736
+28:      US    JFK  9.284688
+29:      US    LGA  1.363388
+30:      OO    LGA 12.592965
+31:      OO    EWR  9.000000
+32:      VX    LGA -6.266667
+    carrier origin avg_delay</code></pre>
+</div>
+</div>
+<p>Це дасть середнє запізнення для кожної комбінації авіакомпанії та аеропорту вильоту.</p>
+</section>
+<section id="використання-декількох-агрегатних-функцій" class="level4">
+<h4 class="anchored" data-anchor-id="використання-декількох-агрегатних-функцій">🔹 Використання декількох агрегатних функцій</h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>flights[, .(</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_delay =</span> <span class="fu">max</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_flights =</span> .N</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>), by <span class="ot">=</span> carrier]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    carrier avg_delay max_delay n_flights
+     &lt;char&gt;     &lt;num&gt;     &lt;int&gt;     &lt;int&gt;
+ 1:      AA  8.510532      1498     26302
+ 2:      AS  8.831010       341       574
+ 3:      B6 11.991007       594     44479
+ 4:      DL 12.209798      1087     41683
+ 5:      EV 17.561290       665     39819
+ 6:      F9 24.712474       417       473
+ 7:      FL 20.596323       632      1251
+ 8:      HA  8.488462       922       260
+ 9:      MQ  8.059324       354     18559
+10:      VX 10.375860       430      4797
+11:      WN 18.931524       570     11902
+12:      UA 14.296086       618     46267
+13:      US  3.516000       449     16750
+14:      OO 12.575000       414       200</code></pre>
+</div>
+</div>
+<p>Тут:</p>
+<ul>
+<li><code>.N</code> — вбудована змінна, що містить кількість рядків у групі.</li>
+</ul>
+<hr>
+</section>
+<section id="переваги-агрегації-в-data.table" class="level3">
+<h3 class="anchored" data-anchor-id="переваги-агрегації-в-data.table">✅ Переваги агрегації в <code>data.table</code>:</h3>
+<ul>
+<li><p><strong>Швидкість</strong>: оптимізація на рівні C.</p></li>
+<li><p><strong>Ефективність пам’яті</strong>: немає копіювання даних.</p></li>
+<li><p><strong>Гнучкість</strong>: підтримка складних агрегатів у одному виразі.</p></li>
+<li><p><strong>Масштабованість</strong>: працює з мільйонами/мільярдами рядків без проблем.</p></li>
+</ul>
+</section>
+</section>
+<section id="оновлення-даних-на-місці-by-reference" class="level2">
+<h2 class="anchored" data-anchor-id="оновлення-даних-на-місці-by-reference">Оновлення даних на місці (by reference)</h2>
+<p>Однією з ключових переваг <code>data.table</code> є можливість <strong>оновлювати дані на місці</strong> (in-place), тобто <strong>без створення копій об’єкта</strong>. Це досягається за допомогою оператора <code>:=</code>, який працює <strong>by reference</strong> — прямо в пам’яті, без додаткового виділення ресурсів.</p>
+<p>Це критично важливо при роботі з великими даними, де кожна копія може займати гігабайти пам’яті.</p>
+<section id="приклад-додавання-нового-стовпця" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-додавання-нового-стовпця">🔹 Приклад: додавання нового стовпця</h4>
+<p>Додамо стовпець <code>speed</code> (швидкість у милях на годину) до датасету <code>flights</code>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Додаємо новий стовпець НА МІСЦІ</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>flights[, speed <span class="sc">:</span><span class="er">=</span> distance <span class="sc">/</span> (air_time <span class="sc">/</span> <span class="dv">60</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Після цього:</p>
+<ul>
+<li><p><code>flights</code> містить новий стовпець <code>speed</code></p></li>
+<li><p><strong>не створено новий об’єкт</strong></p></li>
+<li><p><strong>пам’ять не збільшилася</strong> пропорційно розміру таблиці.</p></li>
+</ul>
+</section>
+<section id="порівняння-з-dplyr-1" class="level4">
+<h4 class="anchored" data-anchor-id="порівняння-з-dplyr-1">🔹 Порівняння з <code>dplyr</code></h4>
+<p>У <code>dplyr</code> той самий результат вимагає створення нового об’єкта:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>flights_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(flights)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>flights_df <span class="ot">&lt;-</span> flights_df <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">speed =</span> distance <span class="sc">/</span> (air_time <span class="sc">/</span> <span class="dv">60</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Тут:</p>
+<ul>
+<li><p>створюється нова копія <code>flights_df</code>,</p></li>
+<li><p>стара версія залишається в пам’яті, доки не буде зібрана збирачем сміття,</p></li>
+<li><p>витрачається час на копіювання мільйонів значень.</p></li>
+</ul>
+</section>
+<section id="оновлення-існуючого-стовпця" class="level4">
+<h4 class="anchored" data-anchor-id="оновлення-існуючого-стовпця">🔹 Оновлення існуючого стовпця</h4>
+<p>Можна також <strong>оновлювати існуючі стовпці</strong>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Замінимо від’ємні запізнення на 0</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>flights[dep_delay <span class="sc">&lt;</span> <span class="dv">0</span>, dep_delay <span class="sc">:</span><span class="er">=</span> <span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Це — <strong>умовне оновлення на місці</strong>, яке не створює проміжних структур.</p>
+</section>
+<section id="видалення-стовпців" class="level4">
+<h4 class="anchored" data-anchor-id="видалення-стовпців">🔹 Видалення стовпців</h4>
+<p>Видалення стовпців також відбувається на місці:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>flights[, <span class="fu">c</span>(<span class="st">"hour"</span>) <span class="sc">:</span><span class="er">=</span> <span class="cn">NULL</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<hr>
+</section>
+<section id="переваги-оновлення-на-місці" class="level3">
+<h3 class="anchored" data-anchor-id="переваги-оновлення-на-місці">✅ Переваги оновлення на місці:</h3>
+<ul>
+<li><p><strong>Економія пам’яті</strong>: немає дублювання даних.</p></li>
+<li><p><strong>Швидкість</strong>: операції виконуються миттєво, навіть на мільйонах рядків.</p></li>
+<li><p><strong>Масштабованість</strong>: дозволяє працювати з даними, що перевищують RAM.</p></li>
+<li><p><strong>Чистота коду</strong>: немає потреби у присвоєнні (<code>&lt;-</code>) після кожної операції.</p></li>
+</ul>
+</section>
+</section>
+<section id="злиття-таблиць-через-merge-та-ключі" class="level2">
+<h2 class="anchored" data-anchor-id="злиття-таблиць-через-merge-та-ключі">Злиття таблиць через <code>merge()</code> та ключі</h2>
+<p>У реальних ETL-процесах дані часто розподілені між кількома таблицями (наприклад, інформація про рейси, авіакомпанії, літаки, погоду). Для їх об’єднання <code>data.table</code> надає <strong>ефективні механізми злиття</strong>, які працюють швидше за аналоги в <code>dplyr</code>.</p>
+<section id="два-підходи-до-злиття" class="level4">
+<h4 class="anchored" data-anchor-id="два-підходи-до-злиття">🔹 Два підходи до злиття:</h4>
+<ol type="1">
+<li><p><strong>Через аргумент <code>on =</code></strong> — не вимагає попереднього сортування:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Приклад: додаємо назву авіакомпанії до рейсів</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>airlines <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">carrier =</span> <span class="fu">c</span>(<span class="st">"AA"</span>, <span class="st">"UA"</span>, <span class="st">"DL"</span>), </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">name =</span> <span class="fu">c</span>(<span class="st">"American"</span>, <span class="st">"United"</span>, <span class="st">"Delta"</span>))</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">setkey</span>(airlines, carrier)  <span class="co"># необов’язково, але прискорює</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>flights[airlines, on <span class="ot">=</span> <span class="st">"carrier"</span>, name <span class="sc">:</span><span class="er">=</span> i.name]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Тут <code>i.name</code> — це стовпець <code>name</code> з таблиці <code>airlines</code> (префікс <code>i.</code> позначає “іншу” таблицю).</p></li>
+<li><p><strong>Через ключі (<code>setkey()</code>)</strong> — для максимальної швидкості:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">setkey</span>(flights, carrier)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setkey</span>(airlines, carrier)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>merged <span class="ot">&lt;-</span> flights[airlines]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Після встановлення ключа злиття відбувається за <strong>бінарним пошуком</strong> (<span class="math inline">\(O(log n)\)</span>), що критично для великих даних.</p></li>
+</ol>
+</section>
+<section id="типи-злиття" class="level4">
+<h4 class="anchored" data-anchor-id="типи-злиття">🔹 Типи злиття:</h4>
+<ul>
+<li><p><strong><code>X[Y]</code></strong> — еквівалент <code>left_join</code> у <code>dplyr</code> (зберігає всі рядки з <code>X</code>).</p></li>
+<li><p><strong><code>Y[X]</code></strong> — зберігає всі рядки з <code>Y</code>.</p></li>
+<li><p>Для <strong>внутрішнього злиття</strong> використовуйте <code>nomatch = NULL</code>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>flights[airlines, nomatch <span class="ot">=</span> <span class="cn">NULL</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Key: &lt;carrier&gt;
+         year month   day dep_delay arr_delay carrier origin   dest air_time
+        &lt;int&gt; &lt;int&gt; &lt;int&gt;     &lt;int&gt;     &lt;int&gt;  &lt;char&gt; &lt;char&gt; &lt;char&gt;    &lt;int&gt;
+     1:  2014     1     1        14        13      AA    JFK    LAX      359
+     2:  2014     1     1         0        13      AA    JFK    LAX      363
+     3:  2014     1     1         2         9      AA    JFK    LAX      351
+     4:  2014     1     1         0       -26      AA    LGA    PBI      157
+     5:  2014     1     1         2         1      AA    JFK    LAX      350
+    ---                                                                     
+114248:  2014    10    31       427       393      UA    EWR    ORD      100
+114249:  2014    10    31        10       -27      UA    EWR    LAX      326
+114250:  2014    10    31        18       -14      UA    EWR    LAS      291
+114251:  2014    10    31         1       -30      UA    LGA    IAH      201
+114252:  2014    10    31         0       -14      UA    EWR    IAH      189
+        distance    speed     name   i.name
+           &lt;int&gt;    &lt;num&gt;   &lt;char&gt;   &lt;char&gt;
+     1:     2475 413.6490 American American
+     2:     2475 409.0909 American American
+     3:     2475 423.0769 American American
+     4:     1035 395.5414 American American
+     5:     2475 424.2857 American American
+    ---                                    
+114248:      719 431.4000   United   United
+114249:     2454 451.6564   United   United
+114250:     2227 459.1753   United   United
+114251:     1416 422.6866   United   United
+114252:     1400 444.4444   United   United</code></pre>
+</div>
+</div></li>
+</ul>
+</section>
+<section id="переваги-злиття-в-data.table" class="level4">
+<h4 class="anchored" data-anchor-id="переваги-злиття-в-data.table">🔹 Переваги злиття в <code>data.table</code>:</h4>
+<ul>
+<li><p><strong>Швидкість</strong>: використання індексів та бінарного пошуку.</p></li>
+<li><p><strong>Ефективність пам’яті</strong>: немає створення проміжних копій при оновленні на місці.</p></li>
+<li><p><strong>Гнучкість</strong>: підтримка умовних злиттів (наприклад, <code>on = .(carrier, origin)</code>).</p></li>
+</ul>
+</section>
+</section>
+<section id="перетворення-між-data.frame-та-data.table" class="level2">
+<h2 class="anchored" data-anchor-id="перетворення-між-data.frame-та-data.table">Перетворення між <code>data.frame</code> та <code>data.table</code></h2>
+<p>Пакет <code>data.table</code> повністю сумісний з базовим класом <code>data.frame</code>, що дозволяє легко інтегрувати його в існуючі проєкти без повного переписування коду. Ключові функції для перетворення:</p>
+<ul>
+<li><p><strong><code>setDT()</code></strong> — перетворює <code>data.frame</code> на <code>data.table</code> <strong>на місці</strong> (без копіювання).</p></li>
+<li><p><strong><code>setDF()</code></strong> — навпаки, перетворює <code>data.table</code> назад у <code>data.frame</code> <strong>на місці</strong>.</p></li>
+<li><p><strong><code>as.data.table()</code></strong> — створює <strong>новий об’єкт</strong> <code>data.table</code> (аналог <code>as.data.frame()</code>).</p></li>
+</ul>
+<section id="приклад-перетворення-data.frame-data.table" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-перетворення-data.frame-data.table">🔹 Приклад: перетворення <code>data.frame</code> → <code>data.table</code></h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Завантажуємо дані як data.frame (наприклад, через read.csv)</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>flights_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/flights14.csv"</span>)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Перетворюємо НА МІСЦІ</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">setDT</span>(flights_df)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Тепер flights_df — це data.table</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(flights_df)  <span class="co"># "data.table" "data.frame"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "data.table" "data.frame"</code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>💡 <strong>Перевага <code>setDT()</code></strong>: не створює копії, тому пам’ять не подвоюється — критично для великих даних.</p>
+</blockquote>
+</section>
+<section id="приклад-перетворення-data.table-data.frame" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-перетворення-data.table-data.frame">🔹 Приклад: перетворення <code>data.table</code> → <code>data.frame</code></h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Повертаємо до data.frame (наприклад, для сумісності з ggplot2)</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setDF</span>(flights_df)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(flights_df)  <span class="co"># "data.frame"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "data.frame"</code></pre>
+</div>
+</div>
+</section>
+<section id="коли-це-корисно" class="level4">
+<h4 class="anchored" data-anchor-id="коли-це-корисно">🔹 Коли це корисно?</h4>
+<ul>
+<li><p>Ви отримали дані через <code>read.csv()</code> або <code>vroom()</code> → перетворюєте на <code>data.table</code> для швидкої обробки.</p></li>
+<li><p>Після обробки вам потрібно передати дані в пакет, що не підтримує <code>data.table</code> (наприклад, деякі моделі) → перетворюєте назад.</p></li>
+</ul>
+</section>
+</section>
+<section id="швидке-завантаження-великих-файлів-через-fread" class="level2">
+<h2 class="anchored" data-anchor-id="швидке-завантаження-великих-файлів-через-fread">Швидке завантаження великих файлів через <code>fread()</code></h2>
+<p>Функція <code>fread()</code> — це один із найшвидших інструментів у R для читання текстових файлів (CSV, TSV, інші роздільники). Вона є частиною пакета <code>data.table</code> і призначена для <strong>масштабованого завантаження даних</strong>, навіть коли файли мають <strong>гігабайти</strong>.</p>
+<section id="ключові-переваги-fread" class="level4">
+<h4 class="anchored" data-anchor-id="ключові-переваги-fread">🔹 Ключові переваги <code>fread()</code>:</h4>
+<ul>
+<li><p><strong>Автоматичне визначення</strong>: роздільника, заголовків, типів даних.</p></li>
+<li><p><strong>Підтримка URL</strong>: можна читати файли прямо з GitHub, S3 тощо.</p></li>
+<li><p><strong>Часткове читання</strong>: завантажити лише перші <code>n</code> рядків (<code>nrows</code>), пропустити перші <code>skip</code> рядків.</p></li>
+<li><p><strong>Підтримка стиснених файлів</strong>: <code>.csv.gz</code>, <code>.csv.bz2</code> без попереднього розпакування.</p></li>
+<li><p><strong>Швидкість</strong>: часто перевершує <code>vroom</code> у складних сценаріях (наприклад, коли є багато <code>NA</code>, нестандартні роздільники).</p></li>
+</ul>
+</section>
+<section id="приклад-завантаження-даних-про-рейси" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-завантаження-даних-про-рейси">🔹 Приклад: завантаження даних про рейси</h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Завантаження з локального файлу або з GitHub</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>input <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="st">"flights14.csv"</span>)) {</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"flights14.csv"</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv"</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>flights <span class="ot">&lt;-</span> <span class="fu">fread</span>(input)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Цей код:</p>
+<ul>
+<li><p>автоматично визначить, що це CSV з заголовком,</p></li>
+<li><p>правильно визначить типи (<code>integer</code>, <code>character</code>, тощо),</p></li>
+<li><p>завантажить 253 316 рядків за <strong>долі секунди</strong>.</p></li>
+</ul>
+</section>
+<section id="порівняння-з-read.csv-та-vroom" class="level4">
+<h4 class="anchored" data-anchor-id="порівняння-з-read.csv-та-vroom">🔹 Порівняння з <code>read.csv()</code> та <code>vroom()</code></h4>
+<ul>
+<li><p><code>read.csv()</code> — повільний, створює <code>data.frame</code>, вимагає ручного вказування параметрів.</p></li>
+<li><p><code>vroom()</code> — швидкий, але іноді менш надійний при складних структурах.</p></li>
+<li><p><code>fread()</code> — <strong>найбільш надійний і швидкий</strong> для ETL-процесів у production.</p></li>
+</ul>
+</section>
+<section id="додаткові-можливості" class="level4">
+<h4 class="anchored" data-anchor-id="додаткові-можливості">🔹 Додаткові можливості</h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Завантажити лише перші 1000 рядків</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fread</span>(input, <span class="at">nrows =</span> <span class="dv">1000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>       year month   day dep_delay arr_delay carrier origin   dest air_time
+      &lt;int&gt; &lt;int&gt; &lt;int&gt;     &lt;int&gt;     &lt;int&gt;  &lt;char&gt; &lt;char&gt; &lt;char&gt;    &lt;int&gt;
+   1:  2014     1     1        14        13      AA    JFK    LAX      359
+   2:  2014     1     1        -3        13      AA    JFK    LAX      363
+   3:  2014     1     1         2         9      AA    JFK    LAX      351
+   4:  2014     1     1        -8       -26      AA    LGA    PBI      157
+   5:  2014     1     1         2         1      AA    JFK    LAX      350
+  ---                                                                     
+ 996:  2014     1     2        -1        -9      DL    JFK    SLC      282
+ 997:  2014     1     2       202       213      DL    EWR    ATL      137
+ 998:  2014     1     2        18        43      DL    LGA    DEN      235
+ 999:  2014     1     2         0        29      DL    EWR    ATL      142
+1000:  2014     1     2        -1         3      DL    EWR    ATL      127
+      distance  hour
+         &lt;int&gt; &lt;int&gt;
+   1:     2475     9
+   2:     2475    11
+   3:     2475    19
+   4:     1035     7
+   5:     2475    13
+  ---               
+ 996:     1990     6
+ 997:      746     9
+ 998:     1620     8
+ 999:      746    14
+1000:      746    11</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Пропустити перші 100 рядків</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fread</span>(input, <span class="at">skip =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>           V1    V2    V3    V4    V5     V6     V7     V8    V9   V10   V11
+        &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;char&gt; &lt;char&gt; &lt;char&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;
+     1:  2014     1     1    -3   -10     B6    JFK    SAN   342  2446     8
+     2:  2014     1     1    -9   -14     B6    JFK    FLL   159  1069    19
+     3:  2014     1     1    -7    -2     B6    JFK    PBI   159  1028     6
+     4:  2014     1     1    19    20     B6    LGA    PBI   155  1035    14
+     5:  2014     1     1     4    18     B6    LGA    FLL   165  1076    21
+    ---                                                                     
+253213:  2014    10    31     1   -30     UA    LGA    IAH   201  1416    14
+253214:  2014    10    31    -5   -14     UA    EWR    IAH   189  1400     8
+253215:  2014    10    31    -8    16     MQ    LGA    RDU    83   431    11
+253216:  2014    10    31    -4    15     MQ    LGA    DTW    75   502    11
+253217:  2014    10    31    -5     1     MQ    LGA    SDF   110   659     8</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Вказати роздільник явно (якщо автоматичне визначення не спрацювало)</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fread</span>(input, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>        year,month,day,dep_delay,arr_delay,carrier,origin,dest,air_time,distance,hour
+                                                                               &lt;char&gt;
+     1:                                          2014,1,1,14,13,AA,JFK,LAX,359,2475,9
+     2:                                         2014,1,1,-3,13,AA,JFK,LAX,363,2475,11
+     3:                                           2014,1,1,2,9,AA,JFK,LAX,351,2475,19
+     4:                                         2014,1,1,-8,-26,AA,LGA,PBI,157,1035,7
+     5:                                           2014,1,1,2,1,AA,JFK,LAX,350,2475,13
+    ---                                                                              
+253312:                                       2014,10,31,1,-30,UA,LGA,IAH,201,1416,14
+253313:                                       2014,10,31,-5,-14,UA,EWR,IAH,189,1400,8
+253314:                                         2014,10,31,-8,16,MQ,LGA,RDU,83,431,11
+253315:                                         2014,10,31,-4,15,MQ,LGA,DTW,75,502,11
+253316:                                          2014,10,31,-5,1,MQ,LGA,SDF,110,659,8</code></pre>
+</div>
+</div>
+<p>Це робить <code>fread()</code> <strong>ідеальним інструментом для першого етапу ETL-конвеєра</strong> — коли потрібно швидко і надійно отримати дані для подальшої обробки.</p>
+</section>
+</section>
+<section id="інтеграція-data.table-у-функціональні-конвеєри" class="level2">
+<h2 class="anchored" data-anchor-id="інтеграція-data.table-у-функціональні-конвеєри">Інтеграція <code>data.table</code> у функціональні конвеєри</h2>
+<p>Хоча <code>data.table</code> не використовує оператор <code>%&gt;%</code> за замовчуванням (через свою власну оптимізацію через <code>[...]</code>), його можна легко інтегрувати в <strong>функціональні конвеєри</strong>, зберігаючи як <strong>читабельність</strong>, так і <strong>продуктивність</strong>.</p>
+<section id="приклад-ланцюжок-операцій-без" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-ланцюжок-операцій-без">🔹 Приклад: ланцюжок операцій без <code>%&gt;%</code></h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Обчислити середнє запізнення вильоту за авіакомпанією для рейсів з JFK</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> flights[origin <span class="sc">==</span> <span class="st">"JFK"</span>, .(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), by <span class="ot">=</span> carrier]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Цей код вже є <strong>компактним і швидким</strong>, але іноді бажано поєднати <code>data.table</code> з іншими пакетами (<code>ggplot2</code>, <code>purrr</code>, тощо).</p>
+</section>
+<section id="приклад-поєднання-з-якщо-потрібно" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-поєднання-з-якщо-потрібно">🔹 Приклад: поєднання з <code>%&gt;%</code> (якщо потрібно)</h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr) <span class="co"># для %&gt;% (хоча технічно він з magrittr)</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>flights <span class="sc">%&gt;%</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  .[origin <span class="sc">==</span> <span class="st">"JFK"</span>] <span class="sc">%&gt;%</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  .[, .(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), by <span class="ot">=</span> carrier] <span class="sc">%&gt;%</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  .[<span class="fu">order</span>(<span class="sc">-</span>avg_delay)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>   carrier avg_delay
+    &lt;char&gt;     &lt;num&gt;
+1:      EV 19.818522
+2:      DL 12.454136
+3:      B6 12.291613
+4:      AA  9.654953
+5:      VX  9.591460
+6:      US  9.284688
+7:      MQ  9.234019
+8:      UA  8.595566
+9:      HA  8.488462</code></pre>
+</div>
+</div>
+<p>Тут <code>.</code> позначає поточний об’єкт у конвеєрі. Це дозволяє використовувати <code>%&gt;%</code> разом із синтаксисом <code>data.table</code>.</p>
+</section>
+<section id="приклад-передача-результату-в-ggplot2" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-передача-результату-в-ggplot2">🔹 Приклад: передача результату в <code>ggplot2</code></h4>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>flights[origin <span class="sc">==</span> <span class="st">"JFK"</span>, .(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), by <span class="ot">=</span> carrier] <span class="sc">%&gt;%</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(carrier, avg_delay), <span class="at">y =</span> avg_delay)) <span class="sc">+</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Середнє запізнення вильоту з JFK за авіакомпанією"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="lab_6_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="коли-варто-уникати" class="level4">
+<h4 class="anchored" data-anchor-id="коли-варто-уникати">🔹 Коли варто уникати <code>%&gt;%</code>?</h4>
+<ul>
+<li><p>Коли виконується <strong>багато послідовних операцій <code>data.table</code></strong> — краще використовувати <strong>ланцюжки через <code>[...]</code></strong> або <strong>проміжні змінні</strong>, щоб не втрачати переваги оптимізації.</p></li>
+<li><p>Коли важлива <strong>максимальна швидкість</strong> — кожен <code>%&gt;%</code> додає накладні витрати.</p></li>
+</ul>
+</section>
+<section id="баланс-читабельність-vs-продуктивність" class="level4">
+<h4 class="anchored" data-anchor-id="баланс-читабельність-vs-продуктивність">🔹 Баланс: читабельність vs продуктивність</h4>
+<ul>
+<li><p>Для <strong>інтерактивного аналізу</strong> — можна використовувати <code>%&gt;%</code> для зручності.</p></li>
+<li><p>Для <strong>production-коду</strong> — краще писати чистий <code>data.table</code> без <code>%&gt;%</code>.</p></li>
+</ul>
+<p>Ця гнучкість робить <code>data.table</code> <strong>ідеальним інструментом для інженера даних</strong>, який працює в гетерогенному середовищі, але потребує продуктивності на ключових етапах ETL-конвеєра.</p>
+</section>
+</section>
+<section id="робоче-завдання" class="level2">
+<h2 class="anchored" data-anchor-id="робоче-завдання">Робоче завдання</h2>
+<ul>
+<li>Виконати <a href="#варіанти-індивідуальних-завдань">Індивідуальне завдання</a></li>
+<li>Код розмістити нижче:</li>
+</ul>
+<section id="варіанти-індивідуальних-завдань" class="level3">
+<h3 class="anchored" data-anchor-id="варіанти-індивідуальних-завдань">Варіанти індивідуальних завдань</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><em>Варіанти вибираються по колу, відштовхуючись від номера студента у списку групи.</em></p>
+</div>
+</div>
+</section>
+</section>
+<section id="варіант-1" class="level2">
+<h2 class="anchored" data-anchor-id="варіант-1">Варіант 1</h2>
+<section id="тема-аналіз-ефективності-авіаперевезень-за-2014-рік" class="level3">
+<h3 class="anchored" data-anchor-id="тема-аналіз-ефективності-авіаперевезень-за-2014-рік"><strong>Тема: Аналіз ефективності авіаперевезень за 2014 рік</strong></h3>
+<p>Ви отримали <strong>один великий файл</strong> <code>flights14.csv</code> (253 316 рядків), який містить дані про всі рейси, що вилітали з аеропортів Нью-Йорка у 2014 році (дані з <code>nycflights14</code>). Також у вас є <strong>довідник авіакомпаній</strong> <code>airlines.csv</code> з повними назвами перевізників.</p>
+<p>Ваше завдання — провести <strong>повний аналіз продуктивності авіакомпаній</strong> виключно за допомогою <code>data.table</code>.</p>
+<hr>
+</section>
+<section id="завдання" class="level3">
+<h3 class="anchored" data-anchor-id="завдання">📌 Завдання</h3>
+<section id="етап-1-завантаження-даних" class="level4">
+<h4 class="anchored" data-anchor-id="етап-1-завантаження-даних"><strong>Етап 1: Завантаження даних</strong></h4>
+<ul>
+<li>Завантажте <code>flights14.csv</code> через <code>fread()</code>.</li>
+<li>Завантажте <code>airlines.csv</code> через <code>fread()</code>.</li>
+<li>Переконайтеся, що обидва об’єкти є <code>data.table</code>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>flights <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"data/flights14.csv"</span>)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">class</span>(flights))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "data.table" "data.frame"</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>airlines <span class="ot">&lt;-</span> <span class="fu">data.table</span>(</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">carrier =</span> <span class="fu">c</span>(<span class="st">"9E"</span>, <span class="st">"AA"</span>, <span class="st">"AS"</span>, <span class="st">"B6"</span>, <span class="st">"DL"</span>, <span class="st">"EV"</span>, <span class="st">"F9"</span>, <span class="st">"FL"</span>, <span class="st">"HA"</span>, <span class="st">"MQ"</span>, <span class="st">"OO"</span>, <span class="st">"UA"</span>, <span class="st">"US"</span>, <span class="st">"VX"</span>, <span class="st">"WN"</span>, <span class="st">"YV"</span>),</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="fu">c</span>(<span class="st">"Endeavor Air Inc."</span>, <span class="st">"American Airlines Inc."</span>, <span class="st">"Alaska Airlines Inc."</span>, <span class="st">"JetBlue Airways"</span>, <span class="st">"Delta Air Lines Inc."</span>, <span class="st">"ExpressJet Airlines Inc."</span>, <span class="st">"Frontier Airlines Inc."</span>, <span class="st">"AirTran Airways Corp."</span>, <span class="st">"Hawaiian Airlines Inc."</span>, <span class="st">"Envoy Air"</span>, <span class="st">"SkyWest Airlines Inc."</span>, <span class="st">"United Air Lines Inc."</span>, <span class="st">"US Airways Inc."</span>, <span class="st">"Virgin America"</span>, <span class="st">"Southwest Airlines Co."</span>, <span class="st">"Mesa Airlines Inc."</span>)</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"loaded airlines:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "loaded airlines:"</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">class</span>(airlines))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "data.table" "data.frame"</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-2-підготовка-даних" class="level4">
+<h4 class="anchored" data-anchor-id="етап-2-підготовка-даних"><strong>Етап 2: Підготовка даних</strong></h4>
+<ul>
+<li>Додайте стовпець <code>total_delay = dep_delay + arr_delay</code> <strong>на місці</strong> через <code>:=</code>.</li>
+<li>Замініть від’ємні значення <code>total_delay</code> на 0 (рейс вчасно).</li>
+<li>Видаліть стовпці <code>year</code>, <code>month</code>, <code>day</code> <strong>на місці</strong>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>flights[, total_delay <span class="sc">:</span><span class="er">=</span> dep_delay <span class="sc">+</span> arr_delay]</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>flights[total_delay <span class="sc">&lt;</span> <span class="dv">0</span>, total_delay <span class="sc">:</span><span class="er">=</span> <span class="dv">0</span>]</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>flights[, <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"month"</span>, <span class="st">"day"</span>) <span class="sc">:</span><span class="er">=</span> <span class="cn">NULL</span>]</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Перші 5 рядків після підготовки:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Перші 5 рядків після підготовки:"</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(flights))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>      V1 dep_delay arr_delay carrier origin   dest air_time distance  hour
+   &lt;int&gt;     &lt;int&gt;     &lt;int&gt;  &lt;char&gt; &lt;char&gt; &lt;char&gt;    &lt;int&gt;    &lt;int&gt; &lt;int&gt;
+1:     1        14        13      AA    JFK    LAX      359     2475     9
+2:     2        -3        13      AA    JFK    LAX      363     2475    11
+3:     3         2         9      AA    JFK    LAX      351     2475    19
+4:     4        -8       -26      AA    LGA    PBI      157     1035     7
+5:     5         2         1      AA    JFK    LAX      350     2475    13
+6:     6         4         0      AA    EWR    LAX      339     2454    18
+   total_delay
+         &lt;int&gt;
+1:          27
+2:          10
+3:          11
+4:           0
+5:           3
+6:           4</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-3-агрегація-за-авіакомпаніями" class="level4">
+<h4 class="anchored" data-anchor-id="етап-3-агрегація-за-авіакомпаніями"><strong>Етап 3: Агрегація за авіакомпаніями</strong></h4>
+<ul>
+<li>Обчисліть для кожної авіакомпанії (<code>carrier</code>):
+<ul>
+<li>кількість рейсів (<code>.N</code>),</li>
+<li>середнє <code>total_delay</code>,</li>
+<li>частку рейсів з <code>total_delay &gt; 60</code> хв.</li>
+</ul></li>
+<li>Використовуйте <code>by = carrier</code>.</li>
+<li>Відсортуйте результат за спаданням середнього запізнення через <code>keyby</code>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>carrier_performance <span class="ot">&lt;-</span> flights[, .(</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_flights =</span> .N,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">avg_total_delay =</span> <span class="fu">mean</span>(total_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># piece of deleyed reises</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">delay_fraction =</span> <span class="fu">sum</span>(total_delay <span class="sc">&gt;</span> <span class="dv">60</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> .N</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>), by <span class="ot">=</span> carrier]</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="fu">setorder</span>(carrier_performance, <span class="sc">-</span>avg_total_delay)</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Agregation:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Agregation:"</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(carrier_performance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    carrier n_flights avg_total_delay delay_fraction
+     &lt;char&gt;     &lt;int&gt;           &lt;num&gt;          &lt;num&gt;
+ 1:      F9       473        56.80761     0.29598309
+ 2:      FL      1251        43.98881     0.20383693
+ 3:      EV     39819        40.74389     0.20382230
+ 4:      WN     11902        39.04159     0.17786927
+ 5:      OO       200        34.36000     0.14500000
+ 6:      B6     44479        31.48522     0.14633872
+ 7:      HA       260        31.48077     0.10384615
+ 8:      UA     46267        31.12713     0.14688655
+ 9:      DL     41683        28.87165     0.11863350
+10:      MQ     18559        27.21327     0.14294951
+11:      VX      4797        26.31478     0.10298103
+12:      AA     26302        26.15915     0.11539046
+13:      AS       574        25.48955     0.10627178
+14:      US     16750        16.78149     0.08226866</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-4-злиття-з-довідником" class="level4">
+<h4 class="anchored" data-anchor-id="етап-4-злиття-з-довідником"><strong>Етап 4: Злиття з довідником</strong></h4>
+<ul>
+<li>Об’єднайте результат з <code>airlines</code> через <code>on = "carrier"</code>, щоб додати повну назву авіакомпанії.</li>
+<li>Збережіть у змінну <code>carrier_performance</code>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">setkey</span>(airlines, carrier)</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>carrier_performance[airlines, name <span class="sc">:</span><span class="er">=</span> i.name, on <span class="ot">=</span> <span class="st">"carrier"</span>]</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"result after join:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "result after join:"</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(carrier_performance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    carrier n_flights avg_total_delay delay_fraction                     name
+     &lt;char&gt;     &lt;int&gt;           &lt;num&gt;          &lt;num&gt;                   &lt;char&gt;
+ 1:      F9       473        56.80761     0.29598309   Frontier Airlines Inc.
+ 2:      FL      1251        43.98881     0.20383693    AirTran Airways Corp.
+ 3:      EV     39819        40.74389     0.20382230 ExpressJet Airlines Inc.
+ 4:      WN     11902        39.04159     0.17786927   Southwest Airlines Co.
+ 5:      OO       200        34.36000     0.14500000    SkyWest Airlines Inc.
+ 6:      B6     44479        31.48522     0.14633872          JetBlue Airways
+ 7:      HA       260        31.48077     0.10384615   Hawaiian Airlines Inc.
+ 8:      UA     46267        31.12713     0.14688655    United Air Lines Inc.
+ 9:      DL     41683        28.87165     0.11863350     Delta Air Lines Inc.
+10:      MQ     18559        27.21327     0.14294951                Envoy Air
+11:      VX      4797        26.31478     0.10298103           Virgin America
+12:      AA     26302        26.15915     0.11539046   American Airlines Inc.
+13:      AS       574        25.48955     0.10627178     Alaska Airlines Inc.
+14:      US     16750        16.78149     0.08226866          US Airways Inc.</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-5-аналіз-за-аеропортами" class="level4">
+<h4 class="anchored" data-anchor-id="етап-5-аналіз-за-аеропортами"><strong>Етап 5: Аналіз за аеропортами</strong></h4>
+<ul>
+<li>Для кожного аеропорту вильоту (<code>origin</code>) обчисліть:
+<ul>
+<li>середнє запізнення вильоту (<code>dep_delay</code>),</li>
+<li>кількість унікальних авіакомпаній.</li>
+</ul></li>
+<li>Використовуйте <code>.SD</code> та <code>.SDcols</code>, якщо потрібно.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># avarage of of deley</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>airport_analysis <span class="ot">&lt;-</span> flights[, .(</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">avg_dep_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># uniqueN() - fast data.table function of uniqe meanings</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_unique_carriers =</span> <span class="fu">uniqueN</span>(carrier)</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>), by <span class="ot">=</span> origin]</span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a><span class="fu">setorder</span>(airport_analysis, <span class="sc">-</span>avg_dep_delay)</span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"analize of airports (from the biggest deley):"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "analize of airports (from the biggest deley):"</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(airport_analysis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>   origin avg_dep_delay n_unique_carriers
+   &lt;char&gt;         &lt;num&gt;             &lt;int&gt;
+1:    EWR      15.21248                11
+2:    JFK      11.44617                 9
+3:    LGA      10.60500                12</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-6-візуалізація-опціонально" class="level4">
+<h4 class="anchored" data-anchor-id="етап-6-візуалізація-опціонально"><strong>Етап 6: Візуалізація (опціонально)</strong></h4>
+<ul>
+<li>Перетворіть <code>carrier_performance</code> на <code>data.frame</code> через <code>setDF()</code>.</li>
+<li>Побудуйте графік середнього запізнення за авіакомпаніями (через <code>ggplot2</code>).</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="co"># change carrier_performance to data.frame</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a><span class="fu">setDF</span>(carrier_performance)</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a><span class="co"># graphic build</span></span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(carrier_performance, </span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(name, avg_total_delay), </span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">y =</span> avg_total_delay, </span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">fill =</span> delay_fraction)) <span class="sc">+</span></span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exchange coordinates</span></span>
+<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"#b2e067"</span>, <span class="at">high =</span> <span class="st">"#e03b3b"</span>, <span class="at">name =</span> <span class="st">"part of reises</span><span class="sc">\n</span><span class="st">(deley &gt; 60 min)"</span>) <span class="sc">+</span></span>
+<span id="cb65-15"><a href="#cb65-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb65-16"><a href="#cb65-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"average of deley (2014)"</span>,</span>
+<span id="cb65-17"><a href="#cb65-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"airlaines"</span>,</span>
+<span id="cb65-18"><a href="#cb65-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"avarage deley (min)"</span></span>
+<span id="cb65-19"><a href="#cb65-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb65-20"><a href="#cb65-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb65-21"><a href="#cb65-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb65-22"><a href="#cb65-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb65-23"><a href="#cb65-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb65-24"><a href="#cb65-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>)</span>
+<span id="cb65-25"><a href="#cb65-25" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="lab_6_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="технічні-вимоги" class="level3">
+<h3 class="anchored" data-anchor-id="технічні-вимоги">💡 Технічні вимоги</h3>
+<ul>
+<li>Увесь аналіз має бути виконаний <strong>виключно через <code>data.table</code></strong>.</li>
+<li><strong>Заборонено використовувати <code>dplyr</code>, <code>tidyr</code>, <code>%&gt;%</code></strong> для маніпуляцій з даними.</li>
+<li>Усі файли завантажуються з папки <code>data/</code>.</li>
+<li>Конвеєр має бути <strong>відтворюваним</strong> та <strong>пам’ять-ефективним</strong>.</li>
+</ul>
+<hr style="border: 1px solid #ddd; margin: 30px 0 10px 0;">
+<footer style="text-align: center; font-size: 0.9em; color: #666; padding: 15px; background: #f9f9f9; border-top: 1px solid #eee; margin-top: 20px;">
+  <p><strong>Виконав(ла): Маринченко Валерія Віталіївна</strong> | Група: <strong>КІ-24-1м</strong> | Викладач: Сидоренко В.М.</p>
+  <p>Кременчуцький національний університет імені Михайла Остроградського © 2025</p>
+</footer>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
