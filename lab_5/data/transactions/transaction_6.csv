@@ -1,0 +1,10 @@
+"","product_id","name","price","date","manager","clients","count","sale_sum","transaction_id"
+"1",2,"Smarthphone",850,2025-10-27,"Ivan","client 14",2,1700,6
+"2",5,"Playstation",1000,2025-10-27,"Ivan","client 14",2,2000,6
+"3",1,"Notebook",1000,2025-10-27,"Ivan","client 14",3,3000,6
+"4",10,"Tablet",150,2025-10-27,"Ivan","client 14",2,300,6
+"5",9,"Air conditioning",500,2025-10-27,"Ivan","client 14",3,1500,6
+"6",6,"TV",700,2025-10-27,"Ivan","client 14",3,2100,6
+"7",8,"Wifi router",80,2025-10-27,"Ivan","client 14",3,240,6
+"8",3,"Smart watch",380,2025-10-27,"Ivan","client 14",2,760,6
+"9",7,"XBox",870,2025-10-27,"Ivan","client 14",1,870,6

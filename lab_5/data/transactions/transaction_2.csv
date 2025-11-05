@@ -1,0 +1,10 @@
+"","product_id","name","price","date","manager","clients","count","sale_sum","transaction_id"
+"1",4,"PC",1500,2025-10-15,"Svetlana","client 14",1,1500,2
+"2",6,"TV",700,2025-10-15,"Svetlana","client 14",2,1400,2
+"3",10,"Tablet",150,2025-10-15,"Svetlana","client 14",3,450,2
+"4",5,"Playstation",1000,2025-10-15,"Svetlana","client 14",2,2000,2
+"5",2,"Smarthphone",850,2025-10-15,"Svetlana","client 14",3,2550,2
+"6",7,"XBox",870,2025-10-15,"Svetlana","client 14",1,870,2
+"7",3,"Smart watch",380,2025-10-15,"Svetlana","client 14",3,1140,2
+"8",8,"Wifi router",80,2025-10-15,"Svetlana","client 14",2,160,2
+"9",1,"Notebook",1000,2025-10-15,"Svetlana","client 14",2,2000,2

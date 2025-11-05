@@ -1,0 +1,10 @@
+...1,product_id,name,price,date,manager,clients,count,sale_sum,transaction_id
+1,1,Notebook,1000,2025-10-17,Ivan,client 8,3,3000,3
+2,10,Tablet,150,2025-10-17,Ivan,client 8,1,150,3
+3,6,TV,700,2025-10-17,Ivan,client 8,1,700,3
+4,9,Air conditioning,500,2025-10-17,Ivan,client 8,1,500,3
+5,3,Smart watch,380,2025-10-17,Ivan,client 8,2,760,3
+6,7,XBox,870,2025-10-17,Ivan,client 8,2,1740,3
+7,2,Smarthphone,850,2025-10-17,Ivan,client 8,3,2550,3
+8,8,Wifi router,80,2025-10-17,Ivan,client 8,1,80,3
+9,4,PC,1500,2025-10-17,Ivan,client 8,3,4500,3
