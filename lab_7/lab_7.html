@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Сидоренко Валерій">
+<meta name="dcterms.date" content="2025-11-06">
+
+<title>Лабораторна робота №7: Основи роботи з Apache Spark у середовищі R (через sparklyr)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="lab_7_files/libs/clipboard/clipboard.min.js"></script>
+<script src="lab_7_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="lab_7_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="lab_7_files/libs/quarto-html/popper.min.js"></script>
+<script src="lab_7_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="lab_7_files/libs/quarto-html/anchor.min.js"></script>
+<link href="lab_7_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="lab_7_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="lab_7_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="lab_7_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="lab_7_files/libs/bootstrap/bootstrap-fb20cf6cb377599d9fcbc751916eaf20.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-full toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#мета-роботи" id="toc-мета-роботи" class="nav-link active" data-scroll-target="#мета-роботи">Мета роботи</a></li>
+  <li><a href="#що-ви-будете-вміти-після-виконання-роботи" id="toc-що-ви-будете-вміти-після-виконання-роботи" class="nav-link" data-scroll-target="#що-ви-будете-вміти-після-виконання-роботи">Що ви будете вміти після виконання роботи?</a></li>
+  <li><a href="#вступ" id="toc-вступ" class="nav-link" data-scroll-target="#вступ">Вступ</a></li>
+  <li><a href="#детальніше-про-apache-spark" id="toc-детальніше-про-apache-spark" class="nav-link" data-scroll-target="#детальніше-про-apache-spark">Детальніше про Apache Spark</a></li>
+  <li><a href="#встановлення-та-налаштування-spark-локально" id="toc-встановлення-та-налаштування-spark-локально" class="nav-link" data-scroll-target="#встановлення-та-налаштування-spark-локально">Встановлення та налаштування Spark локально</a></li>
+  <li><a href="#підключення-до-локального-кластера-spark" id="toc-підключення-до-локального-кластера-spark" class="nav-link" data-scroll-target="#підключення-до-локального-кластера-spark">Підключення до локального кластера Spark</a></li>
+  <li><a href="#завантаження-даних-у-spark" id="toc-завантаження-даних-у-spark" class="nav-link" data-scroll-target="#завантаження-даних-у-spark">Завантаження даних у Spark</a></li>
+  <li><a href="#аналіз-даних-через-dplyr-інтерфейс" id="toc-аналіз-даних-через-dplyr-інтерфейс" class="nav-link" data-scroll-target="#аналіз-даних-через-dplyr-інтерфейс">Аналіз даних через dplyr-інтерфейс</a></li>
+  <li><a href="#отримання-результатів-у-r" id="toc-отримання-результатів-у-r" class="nav-link" data-scroll-target="#отримання-результатів-у-r">Отримання результатів у R</a></li>
+  <li><a href="#моніторинг-через-веб-інтерфейс-spark" id="toc-моніторинг-через-веб-інтерфейс-spark" class="nav-link" data-scroll-target="#моніторинг-через-веб-інтерфейс-spark">Моніторинг через веб-інтерфейс Spark</a></li>
+  <li><a href="#відєднання-та-очищення" id="toc-відєднання-та-очищення" class="nav-link" data-scroll-target="#відєднання-та-очищення">Від’єднання та очищення</a></li>
+  <li><a href="#робоче-завдання" id="toc-робоче-завдання" class="nav-link" data-scroll-target="#робоче-завдання">Робоче завдання</a>
+  <ul class="collapse">
+  <li><a href="#варіанти-індивідуальних-завдань" id="toc-варіанти-індивідуальних-завдань" class="nav-link" data-scroll-target="#варіанти-індивідуальних-завдань">Варіанти індивідуальних завдань</a></li>
+  </ul></li>
+  <li><a href="#варіант-1" id="toc-варіант-1" class="nav-link" data-scroll-target="#варіант-1">Варіант 1</a>
+  <ul class="collapse">
+  <li><a href="#тема-аналіз-даних-про-рейси-з-використанням-apache-spark" id="toc-тема-аналіз-даних-про-рейси-з-використанням-apache-spark" class="nav-link" data-scroll-target="#тема-аналіз-даних-про-рейси-з-використанням-apache-spark">Тема: Аналіз даних про рейси з використанням Apache Spark</a></li>
+  <li><a href="#завдання" id="toc-завдання" class="nav-link" data-scroll-target="#завдання">📌 Завдання</a></li>
+  <li><a href="#технічні-вимоги" id="toc-технічні-вимоги" class="nav-link" data-scroll-target="#технічні-вимоги">💡 Технічні вимоги</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content column-page-right" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Лабораторна робота №7: Основи роботи з Apache Spark у середовищі R (через sparklyr)</h1>
+<p class="subtitle lead">Інженерія даних | КрНУ ім. М. Остроградського</p>
+</div>
+
+
+
+<div class="quarto-title-meta column-page-right">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://www.linkedin.com/in/valeriy-sydorenko-6782279a/">Сидоренко Валерій</a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 6, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="мета-роботи" class="level2">
+<h2 class="anchored" data-anchor-id="мета-роботи">Мета роботи</h2>
+<p>Навчитися налаштовувати локальний кластер Apache Spark та виконувати базові операції з великими даними за допомогою R-інтерфейсу <code>sparklyr</code>. Освоїти основні етапи роботи з Spark: підключення, завантаження даних, аналіз через <code>dplyr</code>-синтаксис, моніторинг через веб-інтерфейс та коректне від’єднання.</p>
+<hr>
+</section>
+<section id="що-ви-будете-вміти-після-виконання-роботи" class="level2">
+<h2 class="anchored" data-anchor-id="що-ви-будете-вміти-після-виконання-роботи">Що ви будете вміти після виконання роботи?</h2>
+<p>✅ Встановлювати та налаштовувати <strong>Apache Spark локально</strong> (включаючи Java 8 та пакет <code>sparklyr</code>).<br>
+✅ Підключатися до локального кластера Spark за допомогою <code>spark_connect(master = "local")</code>.<br>
+✅ Завантажувати дані в Spark через <code>copy_to()</code> або <code>spark_read_csv()</code>.<br>
+✅ Виконувати <strong>аналіз даних у розподіленому середовищі</strong> за допомогою знайомого синтаксису <code>dplyr</code> (<code>filter()</code>, <code>select()</code>, <code>group_by()</code>, <code>summarise()</code>).<br>
+✅ Отримувати результати в R через <code>collect()</code>, розуміючи обмеження цієї операції.<br>
+✅ Моніторити виконання завдань через <strong>веб-інтерфейс Spark</strong> (<code>spark_web()</code>): Jobs, Storage, Executors.<br>
+✅ Коректно від’єднуватися від кластера через <code>spark_disconnect()</code>, уникати витоку пам’яті.<br>
+✅ Розуміти, як <strong>масштабувати ETL-конвеєри</strong> на реальних великих даних у майбутньому.</p>
+</section>
+<section id="вступ" class="level2">
+<h2 class="anchored" data-anchor-id="вступ">Вступ</h2>
+<p>У сучасній інженерії даних часто виникають завдання, які <strong>виходять за межі можливостей однієї машини</strong>: обсяги даних перевищують оперативну пам’ять, а обчислення — прийнятні часові межі. У таких умовах класичні інструменти, такі як <code>dplyr</code> або навіть <code>data.table</code>, хоча й дуже ефективні на локальному рівні, вже не забезпечують необхідної масштабованості.</p>
+<p>Саме для цього існує <strong>Apache Spark</strong> — розподілена обчислювальна система нового покоління, призначена для обробки <strong>великих обсягів даних</strong> (Big Data) у кластерному середовищі. Spark дозволяє розподіляти завдання між десятками, сотнями або навіть тисячами вузлів, забезпечуючи <strong>високу продуктивність</strong>, <strong>відмовостійкість</strong> та <strong>гнучкість</strong>.</p>
+<p>Однак Spark спочатку був розроблений для мов Scala та Python. Щоб зробити його доступним для спільноти R, команда <strong>Posit (колишній RStudio)</strong> створила пакет <strong><code>sparklyr</code></strong> — офіційний R-інтерфейс до Apache Spark.</p>
+<p>Пакет <code>sparklyr</code> має кілька ключових переваг:</p>
+<ul>
+<li><strong>Знайомий синтаксис</strong>: ви можете використовувати звичні функції <code>dplyr</code> (<code>filter()</code>, <code>select()</code>, <code>group_by()</code>, <code>summarise()</code>) для роботи з даними у Spark — <code>sparklyr</code> автоматично перетворює їх на <strong>Spark SQL</strong>-запити.</li>
+<li><strong>Інтеграція з R-екосистемою</strong>: підтримка <code>ggplot2</code> для візуалізації, <code>DBI</code> для прямих SQL-запитів, <code>broom</code> для моделювання.</li>
+<li><strong>Локальний та кластерний режими</strong>: ви можете почати з <strong>локального кластера</strong> на власному комп’ютері (що ідеально для навчання), а потім легко перейти до хмарних або корпоративних кластерів (YARN, Kubernetes, Databricks).</li>
+<li><strong>Веб-інтерфейс для моніторингу</strong>: Spark надає детальний UI для відстеження завдань, використання пам’яті, виконавців тощо — це незамінний інструмент для діагностики.</li>
+</ul>
+<p>Ця лабораторна робота не є повним курсом з Apache Spark. Натомість, вона має <strong>одну чітку мету</strong>: дати вам <strong>швидкий, практичний старт</strong> — від встановлення Spark до першого аналізу даних у розподіленому середовищі. Ви навчитеся:</p>
+<ul>
+<li>встановлювати та налаштовувати Spark локально,</li>
+<li>підключатися до кластера через <code>spark_connect()</code>,</li>
+<li>завантажувати дані у Spark (<code>copy_to()</code>, <code>spark_read_csv()</code>),</li>
+<li>виконувати аналіз через <code>dplyr</code>-інтерфейс,</li>
+<li>отримувати результати в R (<code>collect()</code>),</li>
+<li>моніторити процеси через веб-інтерфейс,</li>
+<li>правильно від’єднуватися.</li>
+</ul>
+<p>Цього достатньо, щоб ви могли <strong>почати використовувати Spark у своїх проєктах</strong>, а також зрозуміти, як масштабувати свої ETL-конвеєри на реальних великих даних.</p>
+<p>Джерелом для цієї роботи слугує офіційна книга <strong>«Mastering Spark with R»</strong> <span class="citation" data-cites="luraschi2019">[@luraschi2019]</span>, а саме її розділ <strong>«2. Getting Started»</strong>, що гарантуює наукову та технічну достовірність матеріалу.</p>
+</section>
+<section id="детальніше-про-apache-spark" class="level2">
+<h2 class="anchored" data-anchor-id="детальніше-про-apache-spark">Детальніше про Apache Spark</h2>
+<p>Apache Spark — високопродуктивне рішення для обробки даних, що зберігаються в кластері <a href="https://uk.wikipedia.org/wiki/Apache_Hadoop">Hadoop</a>. У порівнянні з наданим у Hadoop механізмом <a href="https://uk.wikipedia.org/wiki/MapReduce">MapReduce</a>, Spark забезпечує у 100 разів більшу продуктивність при обробленні даних в пам’яті й 10 разів при розміщенні даних на дисках. Рушій може виконуватися на вузлах кластера Hadoop як за допомогою Hadoop YARN, так і у відокремленому режимі. Підтримується оброблення даних у сховищах HDFS, HBase﻿[в інших мовах], Cassandra, Hive﻿[в інших мовах] та будь-якому форматі введення Hadoop (InputFormat).</p>
+<p>Spark може використовуватися як у типових сценаріях оброблення даних, схожих на MapReduce, так і для реалізації специфічних методів, таких як потокове оброблення, SQL, інтерактивні та аналітичні запити, рішення задач машинного навчання і робота з графами. Програми для оброблення даних можуть створюватися на мовах Scala, Java, Python та R.</p>
+<p>Spark після перебування в інкубаторі став первинним проєктом Apache Software Foundation від лютого 2014. <span class="citation" data-cites="wikipedia_apache_spark_uk">[@wikipedia_apache_spark_uk]</span></p>
+<p>Apache Spark — це <strong>розподілена обчислювальна система нового покоління</strong>, призначена для обробки <strong>великих обсягів даних</strong> (Big Data) у кластерному середовищі. Він дозволяє виконувати операції з даними <strong>у пам’яті</strong>, що робить його значно швидшим за традиційні інструменти (наприклад, Hadoop MapReduce).</p>
+<p>Spark підтримує:<br>
+- <strong>пакетну обробку</strong> (batch processing),<br>
+- <strong>потокову обробку</strong> (streaming),<br>
+- <strong>машинне навчання</strong> (MLlib),<br>
+- <strong>SQL-запити</strong> (Spark SQL).</p>
+<p>Уявіть, що вам потрібно переглянути <strong>10 000 сторінок тексту</strong> і знайти всі слова «дані». Якщо ви працюєте <strong>самотужки</strong> (як у звичайному R), ви переглядаєте сторінки по черзі — це може зайняти години. Але якщо у вас є <strong>10 помічників</strong>, і ви роздаєте кожному по 1000 сторінок — робота буде виконана <strong>в 10 разів швидше</strong>.</p>
+<p><strong>Apache Spark — це організатор</strong>, який:<br>
+- розподіляє завдання між багатьма «помічниками» (вузлами кластера)<br>
+- координує їхню роботу<br>
+- збирає результати в єдиний відповідь.</p>
+<p>У межах курсу «Інженерія даних» ми фокусуємось на <strong>пакетній обробці даних</strong> за допомогою <strong>інтерфейсу <code>sparklyr</code></strong>, який дозволяє працювати з Spark через знайомий синтаксис <code>dplyr</code>.</p>
+</section>
+<section id="встановлення-та-налаштування-spark-локально" class="level2">
+<h2 class="anchored" data-anchor-id="встановлення-та-налаштування-spark-локально">Встановлення та налаштування Spark локально</h2>
+<p>Перш ніж працювати з Apache Spark у середовищі R, необхідно встановити кілька компонентів. Оскільки ми працюємо в <strong>локальному режимі</strong> (на власному комп’ютері), усе можна налаштувати автоматично через пакет <code>sparklyr</code>.</p>
+<section id="крок-1-встановлення-java-8" class="level4">
+<h4 class="anchored" data-anchor-id="крок-1-встановлення-java-8">🔧 Крок 1: Встановлення Java 8</h4>
+<p>Apache Spark побудований на мові <strong>Scala</strong>, яка виконується у <strong>Java Virtual Machine (JVM)</strong>. Тому <strong>Java 8</strong> є обов’язковою вимогою.</p>
+<ul>
+<li><p><strong>Перевірте версію Java</strong> у терміналі або через R:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="st">"java -version"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div></li>
+<li><p>Якщо Java не встановлена або версія новіша за 8 (наприклад, Java 11, 17), <strong>встановіть Java 8</strong>:</p>
+<ul>
+<li><p>Windows / macOS: завантажте з <a href="https://adoptium.net/temurin/releases/?version=8">Adoptium (Eclipse Temurin 8)</a><br>
+</p></li>
+<li><p>Linux (Ubuntu/Debian):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install openjdk-8-jdk</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div></li>
+</ul></li>
+<li><p>Після встановлення переконайтеся, що R «бачить» Java 8:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="at">JAVA_HOME =</span> <span class="st">"шлях/до/java8"</span>)  <span class="co"># лише якщо потрібно</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div></li>
+</ul>
+<blockquote class="blockquote">
+<p>💡 <strong>Увага</strong>: Spark <strong>офіційно підтримує лише Java 8</strong>. Новіші версії можуть призвести до помилок.</p>
+</blockquote>
+</section>
+<section id="крок-2-встановлення-пакета-sparklyr" class="level4">
+<h4 class="anchored" data-anchor-id="крок-2-встановлення-пакета-sparklyr">🔧 Крок 2: Встановлення пакета <code>sparklyr</code></h4>
+<p>Встановіть пакет із CRAN:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("sparklyr")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Для доступу до останніх функцій (необов’язково для лабораторної) можна встановити розробницьку версію:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("devtools")</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># devtools::install_github("sparklyr/sparklyr")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="крок-3-встановлення-spark" class="level4">
+<h4 class="anchored" data-anchor-id="крок-3-встановлення-spark">🔧 Крок 3: Встановлення Spark</h4>
+<p>Пакет <code>sparklyr</code> дозволяє автоматично завантажити та налаштувати Spark:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sparklyr)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Встановити останню сумісну версію Spark</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># spark_install(version = "3.3.2")  # рекомендована стабільна версія</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<blockquote class="blockquote">
+<p>💡 За замовчуванням Spark встановлюється у:<br>
+- Windows: <code>%LOCALAPPDATA%\spark</code><br>
+- macOS / Linux: <code>~/spark</code></p>
+</blockquote>
+</section>
+<section id="крок-4-перевірка-встановлення" class="level4">
+<h4 class="anchored" data-anchor-id="крок-4-перевірка-встановлення">🔧 Крок 4: Перевірка встановлення</h4>
+<p>Переконайтеся, що Spark встановлено:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">spark_installed_versions</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  spark hadoop                                                            dir
+1 3.3.2      3 C:\\Users\\vlerk\\AppData\\Local/spark/spark-3.3.2-bin-hadoop3</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Повинен відобразити список, наприклад:</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   spark hadoop                              dir</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 3.3.2    3.3 /Users/valeriy/spark/spark-3.3.2-bin-hadoop3.3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="крок-5-налаштування-опціонально" class="level4">
+<h4 class="anchored" data-anchor-id="крок-5-налаштування-опціонально">🔧 Крок 5: Налаштування (опціонально)</h4>
+<p>Якщо ви хочете вказати власну папку для встановлення:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">spark.install.dir =</span> <span class="st">"C:/my_spark"</span>)  <span class="co"># Windows</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># options(spark.install.dir = "~/custom_spark")  # macOS/Linux</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+</section>
+<section id="підключення-до-локального-кластера-spark" class="level2">
+<h2 class="anchored" data-anchor-id="підключення-до-локального-кластера-spark">Підключення до локального кластера Spark</h2>
+<p>Після успішного встановлення Spark та Java 8, наступним кроком є <strong>створення з’єднання</strong> між R і локальним кластером Spark. Це робиться за допомогою функції <code>spark_connect()</code> з пакета <code>sparklyr</code>.</p>
+<section id="крок-1-підключення-до-локального-кластера" class="level4">
+<h4 class="anchored" data-anchor-id="крок-1-підключення-до-локального-кластера">🔌 Крок 1: Підключення до локального кластера</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sparklyr)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Підключення до локального кластера</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>sc <span class="ot">&lt;-</span> <span class="fu">spark_connect</span>(<span class="at">master =</span> <span class="st">"local"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li><p><strong><code>master = "local"</code></strong> — вказує, що ми використовуємо <strong>локальний кластер</strong> (всі обчислення відбуваються на вашій машині).</p></li>
+<li><p><strong><code>sc</code></strong> — об’єкт з’єднання (скорочення від <em>Spark Connection</em>), який потім використовується у всіх операціях з Spark.</p></li>
+</ul>
+<blockquote class="blockquote">
+<p>💡 <strong>Порада</strong>: Якщо ви хочете використовувати більше ядер, можна вказати, наприклад:<br>
+<code>spark_connect(master = "local[4]")</code> — для 4 ядер.</p>
+</blockquote>
+</section>
+<section id="крок-2-перевірка-зєднання" class="level4">
+<h4 class="anchored" data-anchor-id="крок-2-перевірка-зєднання">🔍 Крок 2: Перевірка з’єднання</h4>
+<p>Після підключення ви можете перевірити, чи все працює:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Переглянути інформацію про з’єднання</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sc)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Переглянути версію Spark</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">spark_version</span>(sc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Якщо з’єднання встановлено успішно, ви побачите інформацію про версію Spark, шлях до <code>SPARK_HOME</code> та інші параметри.</p>
+</section>
+<section id="поширені-помилки" class="level4">
+<h4 class="anchored" data-anchor-id="поширені-помилки">⚠️ Поширені помилки</h4>
+<ul>
+<li><p><strong><code>Java not found</code></strong> — переконайтеся, що встановлено <strong>Java 8</strong> і R «бачить» її.</p></li>
+<li><p><strong><code>Cannot find spark-submit</code></strong> — переконайтеся, що Spark встановлено через <code>spark_install()</code> і шлях до нього коректний.</p></li>
+</ul>
+</section>
+<section id="що-робити-далі" class="level4">
+<h4 class="anchored" data-anchor-id="що-робити-далі">🔗 Що робити далі?</h4>
+<p>Після підключення ви можете:<br>
+- завантажувати дані у Spark<br>
+- виконувати аналіз через <code>dplyr</code><br>
+- моніторити процеси через веб-інтерфейс.</p>
+<p>Це буде розглянуто в наступних підрозділах.</p>
+</section>
+</section>
+<section id="завантаження-даних-у-spark" class="level2">
+<h2 class="anchored" data-anchor-id="завантаження-даних-у-spark">Завантаження даних у Spark</h2>
+<p>Після успішного підключення до Spark, наступним кроком є <strong>завантаження даних</strong> у розподілене середовище. Пакет <code>sparklyr</code> надає кілька способів це зробити — від копіювання локальних <code>data.frame</code> до читання зовнішніх файлів (CSV, JSON, Parquet тощо).</p>
+<section id="крок-1-копіювання-локальних-даних-через-copy_to" class="level4">
+<h4 class="anchored" data-anchor-id="крок-1-копіювання-локальних-даних-через-copy_to">🔹 Крок 1: Копіювання локальних даних через <code>copy_to()</code></h4>
+<p>Найпростіший спосіб — завантажити вже наявний <code>data.frame</code> з R у Spark:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sparklyr)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nycflights13)  <span class="co"># приклад даних</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Підключення (якщо ще не зроблено)</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>sc <span class="ot">&lt;-</span> <span class="fu">spark_connect</span>(<span class="at">master =</span> <span class="st">"local"</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Копіювання даних у Spark</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>flights_tbl <span class="ot">&lt;-</span> <span class="fu">copy_to</span>(sc, nycflights13<span class="sc">::</span>flights, <span class="st">"flights"</span>, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li><strong><code>sc</code></strong> — об’єкт з’єднання.<br>
+</li>
+<li><strong><code>nycflights13::flights</code></strong> — локальний <code>data.frame</code>.<br>
+</li>
+<li><strong><code>"flights"</code></strong> — назва таблиці в Spark.</li>
+<li><strong><code>overwrite = TRUE</code></strong> — дозволяє перезаписати існуючу таблицю.</li>
+</ul>
+<blockquote class="blockquote">
+<p>💡 Цей метод підходить для <strong>невеликих даних</strong> (до кількох мільйонів рядків). Для великих даних краще використовувати прямий імпорт з файлів.</p>
+</blockquote>
+</section>
+<section id="крок-2-завантаження-зовнішніх-файлів" class="level4">
+<h4 class="anchored" data-anchor-id="крок-2-завантаження-зовнішніх-файлів">🔹 Крок 2: Завантаження зовнішніх файлів</h4>
+<p><code>sparklyr</code> підтримує читання багатьох форматів через функції <code>spark_read_*</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Завантаження CSV</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>sales_tbl <span class="ot">&lt;-</span> <span class="fu">spark_read_csv</span>(sc, <span class="st">"sales"</span>, <span class="at">path =</span> <span class="st">"data/sales_2024.csv"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Завантаження JSON</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>logs_tbl <span class="ot">&lt;-</span> <span class="fu">spark_read_json</span>(sc, <span class="st">"logs"</span>, <span class="at">path =</span> <span class="st">"data/app_logs.json"</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Завантаження Parquet (рекомендовано для великих даних)</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>users_tbl <span class="ot">&lt;-</span> <span class="fu">spark_read_parquet</span>(sc, <span class="st">"users"</span>, <span class="at">path =</span> <span class="st">"data/users.parquet"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li><strong><code>"sales"</code></strong>, <strong><code>"logs"</code></strong>, <strong><code>"users"</code></strong> — назви таблиць у Spark.<br>
+</li>
+<li><strong><code>path</code></strong> — шлях до файлу (локальний або <code>hdfs://</code>, <code>s3://</code> тощо).</li>
+</ul>
+<blockquote class="blockquote">
+<p>💡 <strong>Parquet</strong> — стовпцевий формат, оптимізований для аналітичних запитів. Він <strong>швидший і ефективніший за CSV</strong> для великих даних.</p>
+</blockquote>
+</section>
+<section id="крок-3-перегляд-даних-без-завантаження-в-r" class="level4">
+<h4 class="anchored" data-anchor-id="крок-3-перегляд-даних-без-завантаження-в-r">🔹 Крок 3: Перегляд даних без завантаження в R</h4>
+<p>Після завантаження ви можете <strong>переглянути структуру та зміст</strong> таблиці без повного завантаження в R:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Перегляд перших 10 рядків</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(flights_tbl)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Перегляд структури (стовпці та типи)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(flights_tbl)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Кількість рядків</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">count</span>(flights_tbl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Ці операції виконуються <strong>у Spark</strong>, тому не споживають пам’ять R.</p>
+</section>
+<section id="поширені-помилки-1" class="level4">
+<h4 class="anchored" data-anchor-id="поширені-помилки-1">🔹 Поширені помилки</h4>
+<ul>
+<li><strong><code>File not found</code></strong> — переконайтеся, що шлях до файлу коректний і файл існує.<br>
+</li>
+<li><strong><code>Unsupported type</code></strong> — Spark може не підтримувати деякі типи даних R (наприклад, <code>POSIXlt</code>). Використовуйте <code>POSIXct</code>.</li>
+</ul>
+<hr>
+<p>✅ Після цих кроків ваші дані готові до аналізу у розподіленому середовищі — про це йтиметься далі.</p>
+</section>
+</section>
+<section id="аналіз-даних-через-dplyr-інтерфейс" class="level2">
+<h2 class="anchored" data-anchor-id="аналіз-даних-через-dplyr-інтерфейс">Аналіз даних через dplyr-інтерфейс</h2>
+<p>Однією з найбільших переваг <code>sparklyr</code> є те, що він <strong>повністю інтегрується з <code>dplyr</code></strong>. Це означає, що ви можете використовувати знайомий синтаксис <code>filter()</code>, <code>select()</code>, <code>mutate()</code>, <code>group_by()</code>, <code>summarise()</code> для роботи з даними у Spark — а <code>sparklyr</code> автоматично перетворить ваші запити на <strong>Spark SQL</strong> під капотом.</p>
+<p>Це дозволяє:<br>
+- писати <strong>читабельний, виразний код</strong><br>
+- <strong>ускладнювати аналіз поступово</strong> (ланцюжки операцій)<br>
+- <strong>усувати необхідність вивчення SQL</strong> для базових завдань.</p>
+<section id="приклад-1-фільтрація-та-вибірка" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-1-фільтрація-та-вибірка">🔹 Приклад 1: Фільтрація та вибірка</h4>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sparklyr)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Підключення (якщо ще не зроблено)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>sc <span class="ot">&lt;-</span> <span class="fu">spark_connect</span>(<span class="at">master =</span> <span class="st">"local"</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Завантаження даних (як у попередньому підрозділі)</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>flights_tbl <span class="ot">&lt;-</span> <span class="fu">copy_to</span>(sc, nycflights13<span class="sc">::</span>flights, <span class="st">"flights"</span>, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Вибрати рейси з JFK, де запізнення вильоту &gt; 60 хв</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>delayed_flights <span class="ot">&lt;-</span> flights_tbl <span class="sc">%&gt;%</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(origin <span class="sc">==</span> <span class="st">"JFK"</span>, dep_delay <span class="sc">&gt;</span> <span class="dv">60</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(flight, dep_delay, arr_delay, carrier)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Цей код <strong>не завантажує дані в R</strong> — він лише створює <strong>план виконання</strong> у Spark.</p>
+</section>
+<section id="приклад-2-агрегація-за-групами" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-2-агрегація-за-групами">🔹 Приклад 2: Агрегація за групами</h4>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Середнє запізнення вильоту за авіакомпанією</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>avg_delay_by_carrier <span class="ot">&lt;-</span> flights_tbl <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrier) <span class="sc">%&gt;%</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">avg_dep_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<blockquote class="blockquote">
+<p>💡 <strong>Важливо</strong>: операції виконуються <strong>у Spark</strong>, тому навіть на мільйонах рядків вони залишаються швидкими.</p>
+</blockquote>
+</section>
+<section id="приклад-3-сортування-та-обмеження" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-3-сортування-та-обмеження">🔹 Приклад 3: Сортування та обмеження</h4>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Топ-5 авіакомпаній з найбільшим середнім запізненням</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>top_delayed <span class="ot">&lt;-</span> avg_delay_by_carrier <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_dep_delay)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="коли-дані-завантажуються-в-r" class="level4">
+<h4 class="anchored" data-anchor-id="коли-дані-завантажуються-в-r">🔹 Коли дані завантажуються в R?</h4>
+<p>Поки ви використовуєте <code>dplyr</code>-операції, дані залишаються у Spark. Щоб <strong>отримати результат у R</strong>, потрібно викликати <code>collect()</code>:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>result_df <span class="ot">&lt;-</span> top_delayed <span class="sc">%&gt;%</span> <span class="fu">collect</span>()</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(result_df)  <span class="co"># "data.frame"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<blockquote class="blockquote">
+<p>⚠️ <strong>Попередження</strong>: <code>collect()</code> завантажує <strong>всі дані</strong> у пам’ять R. Не використовуйте його для великих таблиць!</p>
+</blockquote>
+</section>
+<section id="підтримувані-функції" class="level4">
+<h4 class="anchored" data-anchor-id="підтримувані-функції">🔹 Підтримувані функції</h4>
+<p><code>sparklyr</code> підтримує більшість функцій <code>dplyr</code>, а також:<br>
+- математичні функції (<code>log()</code>, <code>sqrt()</code>, <code>abs()</code>)<br>
+- логічні операції (<code>if_else()</code>, <code>case_when()</code>)<br>
+- роботу з датами (<code>year()</code>, <code>month()</code>, <code>date()</code>).</p>
+<p>Повний список — у документації: <code>?sparklyr::dplyr</code>.</p>
+</section>
+</section>
+<section id="отримання-результатів-у-r" class="level2">
+<h2 class="anchored" data-anchor-id="отримання-результатів-у-r">Отримання результатів у R</h2>
+<p>Після виконання аналізу у Spark, настає час <strong>отримати результати у локальному середовищі R</strong> для подальшої обробки, візуалізації або збереження. Це робиться за допомогою функції <code>collect()</code>.</p>
+<section id="як-працює-collect" class="level4">
+<h4 class="anchored" data-anchor-id="як-працює-collect">🔹 Як працює <code>collect()</code>?</h4>
+<p>Функція <code>collect()</code> <strong>завантажує дані з Spark у пам’ять R</strong> і перетворює їх на звичайний <code>data.frame</code>:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Приклад з попереднього підрозділу</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>avg_delay_by_carrier <span class="ot">&lt;-</span> flights_tbl <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrier) <span class="sc">%&gt;%</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">avg_dep_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Отримання результату в R</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>result_df <span class="ot">&lt;-</span> avg_delay_by_carrier <span class="sc">%&gt;%</span> <span class="fu">collect</span>()</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(result_df)  <span class="co"># "data.frame"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<blockquote class="blockquote">
+<p>⚠️ <strong>Увага</strong>: <code>collect()</code> завантажує <strong>всі дані</strong> у пам’ять R. Якщо таблиця велика (наприклад, мільйони рядків), це може призвести до <strong>переповнення пам’яті</strong> або зависання R.</p>
+</blockquote>
+</section>
+<section id="коли-використовувати-collect" class="level4">
+<h4 class="anchored" data-anchor-id="коли-використовувати-collect">🔹 Коли використовувати <code>collect()</code>?</h4>
+<ul>
+<li>Для <strong>фінальних результатів</strong> (наприклад, агреговані метрики, топ-10 значень).<br>
+</li>
+<li>Для <strong>візуалізації</strong> (через <code>ggplot2</code>, який працює з <code>data.frame</code>).<br>
+</li>
+<li>Для <strong>збереження у файл</strong> (CSV, Excel тощо).</li>
+</ul>
+</section>
+<section id="що-робити-якщо-дані-занадто-великі" class="level4">
+<h4 class="anchored" data-anchor-id="що-робити-якщо-дані-занадто-великі">🔹 Що робити, якщо дані занадто великі?</h4>
+<ul>
+<li><p><strong>Агрегуйте дані у Spark</strong> перед <code>collect()</code> (наприклад, <code>summarise()</code>, <code>count()</code>).<br>
+</p></li>
+<li><p>Використовуйте <code>head()</code> або <code>sample_n()</code> у Spark для отримання підвибірки:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>sample_df <span class="ot">&lt;-</span> flights_tbl <span class="sc">%&gt;%</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sample_n</span>(<span class="dv">1000</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect</span>()   </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div></li>
+<li><p>Ніколи не виконуйте <code>collect()</code> на нефільтрованій таблиці з мільйонами рядків!</p></li>
+</ul>
+</section>
+<section id="приклад-візуалізація-результатів" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-візуалізація-результатів">🔹 Приклад: візуалізація результатів</h4>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Агрегація у Spark</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>top_carriers <span class="ot">&lt;-</span> flights_tbl <span class="sc">%&gt;%</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrier) <span class="sc">%&gt;%</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">avg_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_delay)) <span class="sc">%&gt;%</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>()  <span class="co"># лише 5 рядків — безпечно!</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Візуалізація в R</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_carriers, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(carrier, avg_delay), <span class="at">y =</span> avg_delay)) <span class="sc">+</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Топ-5 авіакомпаній за середнім запізненням"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<hr>
+<p>✅ Після цього кроку ви зможете <strong>інтегрувати результати Spark у повноцінний аналітичний workflow у R</strong>, включаючи візуалізацію, звітування та моделювання.</p>
+</section>
+</section>
+<section id="моніторинг-через-веб-інтерфейс-spark" class="level2">
+<h2 class="anchored" data-anchor-id="моніторинг-через-веб-інтерфейс-spark">Моніторинг через веб-інтерфейс Spark</h2>
+<p>Після запуску обчислень у Spark, особливо при роботі з великими даними, важливо <strong>відстежувати стан виконання</strong>, використання пам’яті та ресурсів. Для цього Spark надає <strong>вбудований веб-інтерфейс</strong>, який автоматично запускається разом із локальним кластером.</p>
+<section id="як-відкрити-веб-інтерфейс" class="level4">
+<h4 class="anchored" data-anchor-id="як-відкрити-веб-інтерфейс">🔹 Як відкрити веб-інтерфейс?</h4>
+<p>Після підключення до Spark (<code>sc &lt;- spark_connect(...)</code>), виконайте:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">spark_web</span>(sc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Ця команда відкриє веб-інтерфейс у вашому браузері (або виведе URL у консоль, якщо ви використовуєте <code>--no-browse</code>).</p>
+<blockquote class="blockquote">
+<p>💡 <strong>Порада</strong>: Якщо ви компілюєте документ через<br>
+<code>quarto preview lab_7.qmd --no-browse</code>, просто скопіюйте URL з консолі та відкрийте його вручну.</p>
+</blockquote>
+</section>
+<section id="основні-вкладки-інтерфейсу" class="level4">
+<h4 class="anchored" data-anchor-id="основні-вкладки-інтерфейсу">🔹 Основні вкладки інтерфейсу</h4>
+<ol type="1">
+<li><strong>Jobs</strong> — показує активні та завершені завдання (наприклад, <code>collect()</code>, <code>filter()</code>, <code>summarise()</code>).</li>
+<li><strong>Stages</strong> — деталізує етапи виконання кожного завдання.</li>
+<li><strong>Storage</strong> — відображає дані, кешовані в пам’яті (наприклад, таблиці, завантажені через <code>copy_to()</code>).</li>
+<li><strong>Executors</strong> — показує використання ресурсів (пам’ять, ядра) кожним виконавцем.</li>
+<li><strong>Environment</strong> — перелік усіх налаштувань Spark (корисно для діагностики).</li>
+</ol>
+</section>
+<section id="навіщо-це-потрібно" class="level4">
+<h4 class="anchored" data-anchor-id="навіщо-це-потрібно">🔹 Навіщо це потрібно?</h4>
+<ul>
+<li><strong>Діагностика зависань</strong>: якщо аналіз «завис», ви побачите, на якому етапі зупинився процес.<br>
+</li>
+<li><strong>Оптимізація пам’яті</strong>: ви можете побачити, скільки даних кешовано, і чи не перевищуєте ліміт.<br>
+</li>
+<li><strong>Перевірка завантаження даних</strong>: після <code>copy_to()</code> або <code>spark_read_csv()</code> таблиця з’явиться у вкладці <strong>Storage</strong>.</li>
+</ul>
+</section>
+<section id="приклад-моніторинг-завантаження-даних" class="level4">
+<h4 class="anchored" data-anchor-id="приклад-моніторинг-завантаження-даних">🔹 Приклад: моніторинг завантаження даних</h4>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Завантаження даних</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>flights_tbl <span class="ot">&lt;-</span> <span class="fu">copy_to</span>(sc, nycflights13<span class="sc">::</span>flights, <span class="st">"flights"</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Відкриття веб-інтерфейсу</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">spark_web</span>(sc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>У вкладці <strong>Storage</strong> ви побачите таблицю <code>flights</code>, кешовану в пам’яті, з інформацією про розмір (наприклад, <strong>253 316 рядків</strong>, <strong>~15 MB</strong>).</p>
+</section>
+</section>
+<section id="відєднання-та-очищення" class="level2">
+<h2 class="anchored" data-anchor-id="відєднання-та-очищення">Від’єднання та очищення</h2>
+<p>Після завершення роботи з Spark <strong>обов’язково від’єднайтеся від кластера</strong>, щоб звільнити ресурси (пам’ять, процеси) та уникнути витоку пам’яті, особливо при роботі в локальному середовищі.</p>
+<section id="як-відєднатися" class="level4">
+<h4 class="anchored" data-anchor-id="як-відєднатися">🔹 Як від’єднатися?</h4>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Від’єднання від конкретного з’єднання</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">spark_disconnect</span>(sc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Ця команда:<br>
+- зупиняє Spark-додаток<br>
+- звільняє всю виділену пам’ять<br>
+- закриває процеси JVM.</p>
+</section>
+<section id="що-робити-якщо-обєкт-sc-втрачено" class="level4">
+<h4 class="anchored" data-anchor-id="що-робити-якщо-обєкт-sc-втрачено">🔹 Що робити, якщо об’єкт <code>sc</code> втрачено?</h4>
+<p>Якщо ви випадково видалили <code>sc</code> або маєте кілька з’єднань, можна від’єднатися від <strong>усіх активних сесій</strong>:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">spark_disconnect_all</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="чому-це-важливо" class="level4">
+<h4 class="anchored" data-anchor-id="чому-це-важливо">🔹 Чому це важливо?</h4>
+<ul>
+<li><strong>Локальний кластер</strong>: кожне з’єднання займає <strong>2 ГБ пам’яті</strong> за замовчуванням. Якщо не від’єднатися, процеси залишаться у фоні, і пам’ять не звільниться.<br>
+</li>
+<li><strong>Спільні кластери</strong>: ви можете блокувати ресурси для інших користувачів.<br>
+</li>
+<li><strong>Quarto/RStudio</strong>: при повторному запуску документа без від’єднання можуть виникнути конфлікти з’єднань.</li>
+</ul>
+</section>
+<section id="автоматичне-відєднання" class="level4">
+<h4 class="anchored" data-anchor-id="автоматичне-відєднання">🔹 Автоматичне від’єднання</h4>
+<p>Хоча вихід з R або перезапуск сесії автоматично завершує з’єднання, <strong>ніколи не покладайтеся на це</strong> у production-коді. Завжди використовуйте явне <code>spark_disconnect()</code>.</p>
+<hr>
+<p>✅ Цей крок завершує <strong>повний цикл роботи з Apache Spark</strong>:<br>
+1. Встановлення →<br>
+2. Підключення →<br>
+3. Завантаження даних →<br>
+4. Аналіз →<br>
+5. Отримання результатів →<br>
+6. Моніторинг →<br>
+7. <strong>Від’єднання</strong>.</p>
+<p>Це робить ваш код <strong>надійним, чистим і готовим до масштабування</strong>.</p>
+</section>
+</section>
+<section id="робоче-завдання" class="level2">
+<h2 class="anchored" data-anchor-id="робоче-завдання">Робоче завдання</h2>
+<ul>
+<li>Виконати <a href="#варіанти-індивідуальних-завдань">Індивідуальне завдання.</a></li>
+<li>Код розмістити нижче:</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Тут має бути ваш код</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="варіанти-індивідуальних-завдань" class="level3">
+<h3 class="anchored" data-anchor-id="варіанти-індивідуальних-завдань">Варіанти індивідуальних завдань</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><em>Варіанти вибираються по колу, відштовхуючись від номера студента у списку групи.</em></p>
+</div>
+</div>
+</section>
+</section>
+<section id="варіант-1" class="level2">
+<h2 class="anchored" data-anchor-id="варіант-1">Варіант 1</h2>
+<section id="тема-аналіз-даних-про-рейси-з-використанням-apache-spark" class="level3">
+<h3 class="anchored" data-anchor-id="тема-аналіз-даних-про-рейси-з-використанням-apache-spark">Тема: Аналіз даних про рейси з використанням Apache Spark</h3>
+<p>Ви отримали великий файл <code>flights_2014.csv</code> (253 316 рядків), який містить дані про всі рейси, що вилітали з аеропортів Нью-Йорка у 2014 році (дані з <code>nycflights14</code>). Ваше завдання — провести аналіз продуктивності авіакомпаній у <strong>розподіленому середовищі Apache Spark</strong>, використовуючи лише R-інтерфейс <code>sparklyr</code>.</p>
+<hr>
+</section>
+<section id="завдання" class="level3">
+<h3 class="anchored" data-anchor-id="завдання">📌 Завдання</h3>
+<section id="етап-1-встановлення-та-підключення" class="level4">
+<h4 class="anchored" data-anchor-id="етап-1-встановлення-та-підключення"><strong>Етап 1: Встановлення та підключення</strong></h4>
+<ul>
+<li>Встановіть Java 8, пакет <code>sparklyr</code> та Spark (версія 3.3.2) через <code>spark_install()</code>.<br>
+</li>
+<li>Підключіться до <strong>локального кластера Spark</strong> через <code>spark_connect(master = "local")</code>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages("sparklyr")</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co"># create connection object Spark Context</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"sparklyr"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"sparklyr"</span>)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"sparklyr"</span>)</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="fu">tryCatch</span>({</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">spark_install</span>(<span class="at">version =</span> <span class="st">"3.3.2"</span>)</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>}, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Spark version 3.3.2 already installed or error installation: "</span>, <span class="fu">conditionMessage</span>(e))</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>sc <span class="ot">&lt;-</span> <span class="fu">spark_connect</span>(</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">master =</span> <span class="st">"local"</span>,</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">config =</span> <span class="fu">spark_config</span>()</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"successful connection"</span>)</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$master
+[1] "local[12]"
+
+$method
+[1] "shell"
+
+$app_name
+[1] "sparklyr"
+
+$config
+$config$spark.install.dir
+[1] "C:/my_spark"
+
+$config$spark.env.SPARK_LOCAL_IP.local
+[1] "127.0.0.1"
+
+$config$sparklyr.connect.csv.embedded
+[1] "^1.*"
+
+$config$spark.sql.legacy.utcTimestampFunc.enabled
+[1] TRUE
+
+$config$sparklyr.connect.cores.local
+[1] 12
+
+$config$spark.sql.shuffle.partitions.local
+[1] 12
+
+$config$sparklyr.shell.name
+[1] "sparklyr"
+
+$config$`sparklyr.shell.driver-memory`
+[1] "2g"
+
+
+$state
+&lt;environment: 0x00000249fa016a20&gt;
+
+$extensions
+$extensions$jars
+character(0)
+
+$extensions$packages
+character(0)
+
+$extensions$initializers
+list()
+
+$extensions$catalog_jars
+character(0)
+
+$extensions$repositories
+character(0)
+
+$extensions$dbplyr_sql_variant
+$extensions$dbplyr_sql_variant$scalar
+list()
+
+$extensions$dbplyr_sql_variant$aggregate
+list()
+
+$extensions$dbplyr_sql_variant$window
+list()
+
+
+
+$spark_home
+[1] "C:\\my_spark\\spark-3.3.2-bin-hadoop3"
+
+$backend
+A connection with                              
+description "-&gt;localhost:8881"
+class       "sockconn"        
+mode        "wb"              
+text        "binary"          
+opened      "opened"          
+can read    "yes"             
+can write   "yes"             
+
+$monitoring
+A connection with                              
+description "-&gt;localhost:8881"
+class       "sockconn"        
+mode        "wb"              
+text        "binary"          
+opened      "opened"          
+can read    "yes"             
+can write   "yes"             
+
+$gateway
+A connection with                              
+description "-&gt;localhost:8880"
+class       "sockconn"        
+mode        "rb"              
+text        "binary"          
+opened      "opened"          
+can read    "yes"             
+can write   "yes"             
+
+$output_file
+[1] "C:\\Users\\vlerk\\AppData\\Local\\Temp\\RtmpMnqr4n\\fileae41d503795_spark.log"
+
+$sessionId
+[1] 20246
+
+$home_version
+[1] "3.3.2"
+
+attr(,"class")
+[1] "spark_connection"       "spark_shell_connection" "DBIConnection"         </code></pre>
+</div>
+</div>
+</section>
+<section id="етап-2-завантаження-даних" class="level4">
+<h4 class="anchored" data-anchor-id="етап-2-завантаження-даних"><strong>Етап 2: Завантаження даних</strong></h4>
+<ul>
+<li>Завантажте файл <code>flights_2014.csv</code> у Spark через <code>copy_to()</code> або <code>spark_read_csv()</code>.<br>
+</li>
+<li>Переконайтеся, що таблиця доступна у Spark (використовуйте <code>glimpse()</code> або <code>count()</code>).</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>relative_path <span class="ot">&lt;-</span> <span class="st">"data/flights14.csv"</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co"># normalizePath for Spark/Java</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>file_path <span class="ot">&lt;-</span> <span class="fu">normalizePath</span>(relative_path)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="fu">paste0</span>(<span class="st">"absolute path for Spark: "</span>, file_path))</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="fu">paste0</span>(<span class="st">"loading file: "</span>, file_path, <span class="st">" to Spark..."</span>))</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>flights_tbl <span class="ot">&lt;-</span> <span class="fu">spark_read_csv</span>(</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  sc,</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">"flights_2014"</span>,      <span class="co"># table name Spark</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> file_path,</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">header =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">infer_schema =</span> <span class="cn">TRUE</span>,         <span class="co"># automatic define datatypes</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">memory =</span> <span class="cn">TRUE</span>,               <span class="co"># cashing Spark</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"data was loaded to Spark. table name: flights_2014"</span>)</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"table structure in Spark:"</span>)</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(flights_tbl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: ??
+Columns: 12
+Database: spark_connection
+$ `_c0`     &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1…
+$ year      &lt;int&gt; 2014, 2014, 2014, 2014, 2014, 2014, 2014, 2014, 2014, 2014, …
+$ month     &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+$ day       &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+$ dep_delay &lt;int&gt; 14, -3, 2, -8, 2, 4, -2, -3, -1, -2, -5, 7, 3, 142, -5, 18, …
+$ arr_delay &lt;int&gt; 13, 13, 9, -26, 1, 0, -18, -14, -17, -14, -17, -5, 1, 133, -…
+$ carrier   &lt;chr&gt; "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA", "AA", …
+$ origin    &lt;chr&gt; "JFK", "JFK", "JFK", "LGA", "JFK", "EWR", "JFK", "JFK", "JFK…
+$ dest      &lt;chr&gt; "LAX", "LAX", "LAX", "PBI", "LAX", "LAX", "LAX", "LAX", "MIA…
+$ air_time  &lt;int&gt; 359, 363, 351, 157, 350, 339, 338, 356, 161, 349, 161, 365, …
+$ distance  &lt;int&gt; 2475, 2475, 2475, 1035, 2475, 2454, 2475, 2475, 1089, 2422, …
+$ hour      &lt;int&gt; 9, 11, 19, 7, 13, 18, 21, 15, 15, 18, 16, 17, 12, 19, 17, 17…</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"number of rows in the table:"</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>row_count <span class="ot">&lt;-</span> flights_tbl <span class="sc">%&gt;%</span> </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>()</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="fu">paste</span>(<span class="st">"total number of rows (from Spark):"</span>, row_count<span class="sc">$</span>n))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="етап-3-аналіз-через-dplyr-інтерфейс" class="level4">
+<h4 class="anchored" data-anchor-id="етап-3-аналіз-через-dplyr-інтерфейс"><strong>Етап 3: Аналіз через dplyr-інтерфейс</strong></h4>
+<p>Виконайте наступні операції <strong>у Spark</strong>, використовуючи синтаксис <code>dplyr</code>:<br>
+- Відфільтруйте рейси з аеропорту <strong>JFK</strong>, де запізнення вильоту (<code>dep_delay</code>) &gt; 60 хв.<br>
+- Обчисліть <strong>середнє запізнення вильоту</strong> за кожною авіакомпанією (<code>carrier</code>).<br>
+- Відсортуйте результат за спаданням середнього запізнення.<br>
+- Виберіть <strong>топ-5 авіакомпаній</strong> з найбільшим запізненням.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"analizeing: searching top-5 airlines with the biggest deley..."</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>top_carriers_spark <span class="ot">&lt;-</span> flights_tbl <span class="sc">%&gt;%</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(origin <span class="sc">==</span> <span class="st">"JFK"</span>, dep_delay <span class="sc">&gt;</span> <span class="dv">60</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># avarage deley for each airline (carrier)</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrier) <span class="sc">%&gt;%</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">avg_dep_delay =</span> <span class="fu">mean</span>(dep_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># sorting</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_dep_delay)) <span class="sc">%&gt;%</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 4. choosing top-5</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">5</span>)</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(top_carriers_spark)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># Source:     SQL [?? x 2]
+# Database:   spark_connection
+# Ordered by: desc(avg_dep_delay)
+  carrier avg_dep_delay
+  &lt;chr&gt;           &lt;dbl&gt;
+1 HA               228.
+2 DL               146.
+3 EV               142.
+4 VX               137.
+5 AA               134.</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-4-отримання-результатів-у-r" class="level4">
+<h4 class="anchored" data-anchor-id="етап-4-отримання-результатів-у-r"><strong>Етап 4: Отримання результатів у R</strong></h4>
+<ul>
+<li>Завантажте результат у R через <code>collect()</code>.<br>
+</li>
+<li>Переконайтеся, що результат — це <code>data.frame</code> з 5 рядками.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"top-5 results in R data.frame using collect()..."</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>top_carriers_r <span class="ot">&lt;-</span> top_carriers_spark <span class="sc">%&gt;%</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>()</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"result structure in R:"</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(top_carriers_r)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 2
+  carrier avg_dep_delay
+  &lt;chr&gt;           &lt;dbl&gt;
+1 HA               228.
+2 DL               146.
+3 EV               142.
+4 VX               137.
+5 AA               134.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="fu">paste0</span>(<span class="st">"number of rows in R data.frame: "</span>, <span class="fu">nrow</span>(top_carriers_r)))</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.data.frame</span>(top_carriers_r) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(top_carriers_r) <span class="sc">==</span> <span class="dv">5</span>) {</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"succesful: got R data.frame with 5 rows"</span>)</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"fail: 5 rows expected "</span>)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="етап-5-моніторинг-через-веб-інтерфейс" class="level4">
+<h4 class="anchored" data-anchor-id="етап-5-моніторинг-через-веб-інтерфейс"><strong>Етап 5: Моніторинг через веб-інтерфейс</strong></h4>
+<ul>
+<li>Відкрийте веб-інтерфейс Spark через <code>spark_web(sc)</code>.<br>
+</li>
+<li>Перевірте:
+<ul>
+<li>чи з’явився ваш датафрейм у вкладці <strong>Storage</strong><br>
+</li>
+<li>чи виконався запит у вкладці <strong>Jobs</strong><br>
+</li>
+<li>скільки пам’яті використовується (вкладка <strong>Executors</strong>).</li>
+</ul></li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">spark_web</span>(sc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Датафрейм з’явився у вкладці <strong>Storage</strong></p>
+<p>Запит виконався у вкладці <strong>Jobs</strong></p>
+<p>Використання пам’яті - 3.3 MiB / 912.3 MiB</p>
+</section>
+<section id="етап-6-відєднання" class="level4">
+<h4 class="anchored" data-anchor-id="етап-6-відєднання"><strong>Етап 6: Від’єднання</strong></h4>
+<ul>
+<li>Коректно від’єднайтеся від кластера через <code>spark_disconnect(sc)</code>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"disconnect from Spark..."</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">spark_disconnect</span>(sc)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"disconnect ended. Spark session was closed"</span>)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(sc, flights_tbl, top_carriers_spark, top_carriers_r)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<hr>
+</section>
+</section>
+<section id="технічні-вимоги" class="level3">
+<h3 class="anchored" data-anchor-id="технічні-вимоги">💡 Технічні вимоги</h3>
+<ul>
+<li>Увесь аналіз має бути виконаний <strong>виключно через <code>sparklyr</code></strong>.<br>
+</li>
+<li><strong>Заборонено використовувати <code>dplyr</code> без Spark-бекенду</strong> для великих операцій.<br>
+</li>
+<li>Усі файли завантажуються з папки <code>data/</code>.<br>
+</li>
+<li>Код має бути <strong>відтворюваним</strong> та <strong>пам’ять-ефективним</strong> (не використовуйте <code>collect()</code> на повній таблиці!).</li>
+</ul>
+<hr style="border: 1px solid #ddd; margin: 30px 0 10px 0;">
+<footer style="text-align: center; font-size: 0.9em; color: #666; padding: 15px; background: #f9f9f9; border-top: 1px solid #eee; margin-top: 20px;">
+  <p><strong>Виконав(ла): Маринченко Валерія Віталіївна</strong> | Група: <strong>КІ-24-1м</strong> | Викладач: Сидоренко В.М.</p>
+  <p>Кременчуцький національний університет імені Михайла Остроградського © 2025</p>
+</footer>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
