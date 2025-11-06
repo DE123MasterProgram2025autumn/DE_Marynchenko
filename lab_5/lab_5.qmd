@@ -285,6 +285,7 @@ print(final_high_value_table)
 
 ```{r}
 library(doFuture)
+library(furrr)
 analyze_manager <- function(df) {
   # df - transactions for one manager
   summarize(
@@ -562,7 +563,7 @@ list.files(output_dir)
 ```{=html}
 <hr style="border: 1px solid #ddd; margin: 30px 0 10px 0;">
 <footer style="text-align: center; font-size: 0.9em; color: #666; padding: 15px; background: #f9f9f9; border-top: 1px solid #eee; margin-top: 20px;">
-  <p><strong>Виконав(ла): Ваше ПІБ</strong> | Група: <strong>Ваша група</strong> | Викладач: Сидоренко В.М.</p>
+  <p><strong>Виконав(ла): Маринченко Валерія Віталіївна</strong> | Група: <strong>КІ-24-1м</strong> | Викладач: Сидоренко В.М.</p>
   <p>Кременчуцький національний університет імені Михайла Остроградського &copy; 2025</p>
 </footer>
 ```

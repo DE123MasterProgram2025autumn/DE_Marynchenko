@@ -75,112 +75,6 @@ editor:
 
 - Опрацювати [приклад 1](lab2_DE_2022_part1.R) та [приклад 2](lab2_DE_2022__part2.R)
 
-```{r}
-?read.csv()
-# І Імпорт даних з TSV, CSV, Excel файлов и Google Таблиц -----------------
-
-# Зазавантаження даних у R
-# ІНсталяція пакетів
-# install.packages("vroom")
-```
-
-
-
-```{r}
-# install.packages("readxl")
-# install.packages("devtools")
-devtools::install_github("tidyverse/googlesheets4", force = TRUE)
-
-# ###########################################
-# підключення пакетів
-
-packages <- c("vroom", "readxl", "devtools", "vroom")
-
-lapply(packages, library, character.only = TRUE)
-
-library("vroom")
-
-
-# ###########################################
-# Читання CSV, TSV та інших  текстових файлів
-getwd()
-
-## читання локальних файлів
-ga_data <- vroom(file = "data/ga_nowember.csv", delim = "/t")
-ga_data <- vroom(file = "data/ga_nowember.csv")
-ga_data_2 <- vroom(file = "data/ga_december.csv")
-
-
-## читання файлів, опублікованих в інтернеті
-ga_data_i <- vroom("https://raw.githubusercontent.com/selesnow/publications/master/data_example/russian_text_in_r/ga_nowember.csv")
-
-## читання декількох файлів в одну таблицю
-files <- dir(path = "data", pattern = "\\data/.csv$")
-ga_full <- vroom(files, delim = "\t")
-
-View(ga_full)
-
-
-# ###########################################
-# Читання Excel файлів
-library(readxl)
-
-## отримати список листів з Excel файлу
-excel_sheets("data/ga_examples.xlsx")
-
-## зчитати дані з листа
-xl_dec <- read_excel("data/ga_examples.xlsx", sheet = "dec")
-
-
-# ###########################################
-# Читання Google Таблиць
-library(googlesheets4)
-
-
-# Актуальний синтаксис див. тут: https://googlesheets4.tidyverse.org/reference/index.html#section-auth
-
-## Авторизація НЕПРАВИЛЬНА!
-##sheets_auth(email = "vlerkalerka@gmail.com")
-#sheets_find()
-
-# ПРАВИЛЬНА
-gs4_auth(email = "vlerkalerka@gmail.com")
-gs4_deauth()
-gs4_find()
-
-## Підключення до доксу
-ss_id <- as_sheets_id("1xu_beKZVpJJTHTvAab_vN3ZiMB03BytKArGjJUO8cck")
-ss_id <- as_sheets_id("1ucz62sENkrkSEzMNXFVdQbIVHB0ZQw66")
-
-# альтернативний варіант
-read_sheet("https://docs.google.com/spreadsheets/d/1U6Cf_qEOhiR9AZqTqS3mbMF3zt2db48ZP5v3rkrAEJY/edit?gid=780868077#gid=780868077")
-
-## відкрити докс у браузері
-gs4_browse(ss_id)
-
-## подивитися список листів
-sheet_names(ss_id)
-
-## отримати дані з листа
-
-gs_ga_data <- sheets_read(ss = ss_id, 
-                          sheet = "dec")
-
-## отримати дані з діапазона на листі
-gs_ga_data <- sheets_read(ss = ss, 
-                          sheet = "dec", 
-                          range = "A1:C10")
-```
-
-- Виконати [Індивідуальне завдання](#варіанти-індивідуальних-завдань)\
-
-- Код розмістити нижче:
-
-```{r}
-
-# Тут має бути Ваш код
-
-```
 
 ### Варіанти індивідуальних завдань
 
@@ -225,7 +119,16 @@ gs_ga_data <- sheets_read(ss = ss,
  - Завантажте `customers.csv` за допомогою `vroom`.
  
 ```{r}
+# install.packages("vroom")
+# install.packages("readxl")
+# install.packages("devtools")
+# devtools::install_github("tidyverse/googlesheets4", force = TRUE)
 
+packages <- c("vroom", "readxl", "devtools", "vroom")
+
+lapply(packages, library, character.only = TRUE)
+
+library("vroom")
 sales_q1 <- lapply(
   c("sales_jan", "sales_feb", "sales_mar"),
   function(sheet_name) {
@@ -252,13 +155,12 @@ library(dplyr)
 library(purrr)
 
 all_sales <- c(
-    # Присвоюємо імена елементам списків
+    # set names for list items
     sales_q1 %>% set_names(c("sales_jan", "sales_feb", "sales_mar")),
     sales_q2 %>% set_names(c("sales_apr", "sales_may", "sales_jun"))
   ) |>
-  # Об'єднуємо всі таблиці, створюючи стовпець "month" з імен списків
+  # join all tables
   dplyr::bind_rows(.id = "month") |>
-  # Перетворюємо назви місяців
   dplyr::mutate(
     month = dplyr::case_match(month, 
       "sales_jan" ~ "2025-01",

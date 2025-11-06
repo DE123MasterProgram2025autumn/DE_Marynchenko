@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Сидоренко Валерій">
+<meta name="dcterms.date" content="2025-11-06">
+
+<title>Лабораторна робота №4: Оптимізація коду в R — від циклів до функціонального програмування</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="lab_4_files/libs/clipboard/clipboard.min.js"></script>
+<script src="lab_4_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="lab_4_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="lab_4_files/libs/quarto-html/popper.min.js"></script>
+<script src="lab_4_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="lab_4_files/libs/quarto-html/anchor.min.js"></script>
+<link href="lab_4_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="lab_4_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="lab_4_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="lab_4_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="lab_4_files/libs/bootstrap/bootstrap-fb20cf6cb377599d9fcbc751916eaf20.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-full toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#мета-роботи" id="toc-мета-роботи" class="nav-link active" data-scroll-target="#мета-роботи">Мета роботи</a></li>
+  <li><a href="#що-ви-будете-вміти-після-виконання-роботи" id="toc-що-ви-будете-вміти-після-виконання-роботи" class="nav-link" data-scroll-target="#що-ви-будете-вміти-після-виконання-роботи">Що ви будете вміти після виконання роботи?</a></li>
+  <li><a href="#вступ" id="toc-вступ" class="nav-link" data-scroll-target="#вступ">Вступ</a></li>
+  <li><a href="#цикли-в-базовому-синтаксисі-r-for-while-та-repeat" id="toc-цикли-в-базовому-синтаксисі-r-for-while-та-repeat" class="nav-link" data-scroll-target="#цикли-в-базовому-синтаксисі-r-for-while-та-repeat">Цикли в базовому синтаксисі R: <code>for</code>, <code>while</code> та <code>repeat</code></a>
+  <ul class="collapse">
+  <li><a href="#робоче-завдання-1" id="toc-робоче-завдання-1" class="nav-link" data-scroll-target="#робоче-завдання-1">Робоче завдання 1</a></li>
+  </ul></li>
+  <li><a href="#функції-сімейства-apply-функціональна-альтернатива-циклам" id="toc-функції-сімейства-apply-функціональна-альтернатива-циклам" class="nav-link" data-scroll-target="#функції-сімейства-apply-функціональна-альтернатива-циклам">Функції сімейства <code>apply</code>: функціональна альтернатива циклам</a>
+  <ul class="collapse">
+  <li><a href="#робоче-завдання-2" id="toc-робоче-завдання-2" class="nav-link" data-scroll-target="#робоче-завдання-2">Робоче завдання 2</a></li>
+  </ul></li>
+  <li><a href="#обробка-помилок-у-функціональному-стилі-trycatch-з-lapply" id="toc-обробка-помилок-у-функціональному-стилі-trycatch-з-lapply" class="nav-link" data-scroll-target="#обробка-помилок-у-функціональному-стилі-trycatch-з-lapply">Обробка помилок у функціональному стилі: <code>tryCatch()</code> з <code>lapply()</code></a></li>
+  <li><a href="#робоче-завдання" id="toc-робоче-завдання" class="nav-link" data-scroll-target="#робоче-завдання">Робоче завдання</a></li>
+  <li><a href="#варіант-1" id="toc-варіант-1" class="nav-link" data-scroll-target="#варіант-1">Варіант 1</a>
+  <ul class="collapse">
+  <li><a href="#тема-аналіз-якості-даних-у-папці-з-щомісячними-звітами" id="toc-тема-аналіз-якості-даних-у-папці-з-щомісячними-звітами" class="nav-link" data-scroll-target="#тема-аналіз-якості-даних-у-папці-з-щомісячними-звітами"><strong>Тема: Аналіз якості даних у папці з щомісячними звітами</strong></a></li>
+  <li><a href="#структура-даних" id="toc-структура-даних" class="nav-link" data-scroll-target="#структура-даних">Структура даних</a></li>
+  <li><a href="#завдання" id="toc-завдання" class="nav-link" data-scroll-target="#завдання">Завдання</a></li>
+  <li><a href="#етап-1-безпечне-завантаження-файлів" id="toc-етап-1-безпечне-завантаження-файлів" class="nav-link" data-scroll-target="#етап-1-безпечне-завантаження-файлів"><strong>Етап 1: Безпечне завантаження файлів</strong></a></li>
+  <li><a href="#етап-2-оптимізована-обробка-даних" id="toc-етап-2-оптимізована-обробка-даних" class="nav-link" data-scroll-target="#етап-2-оптимізована-обробка-даних"><strong>Етап 2: Оптимізована обробка даних</strong></a></li>
+  <li><a href="#етап-3-аналіз-якості-даних" id="toc-етап-3-аналіз-якості-даних" class="nav-link" data-scroll-target="#етап-3-аналіз-якості-даних"><strong>Етап 3: Аналіз якості даних</strong></a></li>
+  <li><a href="#технічні-вимоги" id="toc-технічні-вимоги" class="nav-link" data-scroll-target="#технічні-вимоги">Технічні вимоги</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content column-page-right" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Лабораторна робота №4: Оптимізація коду в R — від циклів до функціонального програмування</h1>
+<p class="subtitle lead">Інженерія даних | КрНУ ім. М. Остроградського</p>
+</div>
+
+
+
+<div class="quarto-title-meta column-page-right">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://www.linkedin.com/in/valeriy-sydorenko-6782279a/">Сидоренко Валерій</a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 6, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="мета-роботи" class="level2">
+<h2 class="anchored" data-anchor-id="мета-роботи">Мета роботи</h2>
+<p>Освоїти сучасні підходи до оптимізації коду в R, зокрема:<br>
+- заміну імперативних циклів (<code>for</code>, <code>while</code>, <code>repeat</code>) на <strong>функціонали</strong> (<code>lapply</code>, <code>sapply</code>, <code>vapply</code>, <code>mapply</code>);<br>
+- використання <strong>векторизованих операцій</strong> (<code>rowSums</code>, <code>colMeans</code>, <code>apply</code>);<br>
+- застосування конструкцій обробки помилок (<code>try</code>, <code>tryCatch</code>) для стійкості конвеєрів.<br>
+Навчитися писати <strong>ефективний, читабельний і масштабований код</strong> у рамках функціональної парадигми програмування.</p>
+</section>
+<section id="що-ви-будете-вміти-після-виконання-роботи" class="level2">
+<h2 class="anchored" data-anchor-id="що-ви-будете-вміти-після-виконання-роботи">Що ви будете вміти після виконання роботи?</h2>
+<ul>
+<li>Використовувати <strong>циклічні конструкції</strong> (<code>for</code>, <code>while</code>, <code>repeat</code>) для базових ітерацій, але розуміти їхні обмеження.<br>
+</li>
+<li>Замінювати цикли на <strong>функціонали сімейства <code>apply</code></strong> для підвищення продуктивності та читабельності.<br>
+</li>
+<li>Застосовувати <strong>векторизовані функції</strong> (<code>rowSums</code>, <code>colMeans</code>) для швидкої обробки таблиць.<br>
+</li>
+<li>Використовувати <strong><code>lapply</code>/<code>sapply</code>/<code>vapply</code></strong> для обробки списків, файлів, колекцій датафреймів.<br>
+</li>
+<li>Застосовувати <strong><code>mapply</code></strong> для паралельної обробки кількох векторів.<br>
+</li>
+<li>Інтегрувати <strong>обробку помилок</strong> (<code>tryCatch</code>) у конвеєри для забезпечення їхньої надійності при роботі з неоднорідними даними.<br>
+</li>
+<li>Дотримуватися <strong>функціонального стилю програмування</strong>, уникати побічних ефектів і глобальних змінних.</li>
+</ul>
+<hr>
+</section>
+<section id="вступ" class="level2">
+<h2 class="anchored" data-anchor-id="вступ">Вступ</h2>
+<p>У R існує два світи програмування: <strong>імперативний</strong> (циклічний, покроковий) і <strong>функціональний</strong> (декларативний, заснований на перетвореннях). Хоча цикли <code>for</code> і <code>while</code> знайомі більшості програмістів, вони часто призводять до <strong>повільного, громіздкого та важкого для підтримки коду</strong>, особливо при роботі з великими обсягами даних.</p>
+<p>Сучасна інженерія даних у R ґрунтується на <strong>функціональній парадигмі</strong>, де: - дані перетворюються за допомогою <strong>чистих функцій</strong> без побічних ефектів; - ітерації реалізуються через <strong>функціонали</strong> (<code>*apply</code>, <code>purrr::map</code>); - обробка помилок інтегрована в конвеєр за допомогою <code>tryCatch</code>.</p>
+<p>Ця лабораторна робота знайомить вас із:</p>
+<ol type="1">
+<li><p><strong>Базовими циклами</strong> — як вони працюють і чому їх варто уникати в production-коді.</p></li>
+<li><p><strong>Функціоналами</strong> — як <code>lapply</code> і <code>vapply</code> роблять код швидшим і безпечнішим.</p></li>
+<li><p><strong>Векторизацією</strong> — як вбудовані функції (<code>rowSums</code>, <code>colMeans</code>) працюють на C-рівні.</p></li>
+</ol>
+<p>Ви також навчитеся <strong>автоматизувати завантаження декількох файлів</strong>, <strong>агрегувати результати</strong> та <strong>безпечно обробляти винятки</strong> — все це є критичними навичками для інженера даних.</p>
+</section>
+<section id="цикли-в-базовому-синтаксисі-r-for-while-та-repeat" class="level2">
+<h2 class="anchored" data-anchor-id="цикли-в-базовому-синтаксисі-r-for-while-та-repeat">Цикли в базовому синтаксисі R: <code>for</code>, <code>while</code> та <code>repeat</code></h2>
+<p>У мові R існують три основні конструкції циклів, які дозволяють багаторазово виконувати блок коду:</p>
+<ul>
+<li><strong><code>for</code></strong> — виконується для кожного елемента у заданій колекції (векторі, списку, стовпці таблиці). Ідеально підходить для відомої кількості ітерацій.</li>
+<li><strong><code>while</code></strong> — повторює виконання, доки задана умова залишається істинною (<code>TRUE</code>). Використовується, коли кількість ітерацій заздалегідь невідома.</li>
+<li><strong><code>repeat</code></strong> — створює нескінченний цикл, який переривається лише за допомогою оператора <code>break</code>. Корисний у сценаріях, де умова виходу визначається всередині тіла циклу.</li>
+</ul>
+<p>Хоча ці конструкції знайомі програмістам з інших мов, у R вони часто призводять до <strong>неоптимального, повільного коду</strong>, особливо при роботі з великими обсягами даних. Це пов’язано з тим, що R — векторизована мова, і багато операцій можна виконувати <strong>без явних циклів</strong>, використовуючи функціонали (<code>lapply</code>, <code>map</code>) або векторизовані функції (<code>rowSums</code>, <code>ifelse</code> тощо).</p>
+<p>Тому цикли в R варто використовувати <strong>лише тоді, коли немає альтернативи</strong>, а в інших випадках — віддавати перевагу функціональному підходу, який забезпечує кращу продуктивність, читабельність і масштабованість коду.</p>
+<section id="робоче-завдання-1" class="level3">
+<h3 class="anchored" data-anchor-id="робоче-завдання-1">Робоче завдання 1</h3>
+<p>Опрацювати <a href="lab4_DE_2022_part1.R">частину 1.</a></p>
+</section>
+</section>
+<section id="функції-сімейства-apply-функціональна-альтернатива-циклам" class="level2">
+<h2 class="anchored" data-anchor-id="функції-сімейства-apply-функціональна-альтернатива-циклам">Функції сімейства <code>apply</code>: функціональна альтернатива циклам</h2>
+<p>У мові R замість імперативних циклів (<code>for</code>, <code>while</code>) рекомендується використовувати <strong>функціонали</strong> — функції, які приймають іншу функцію як аргумент і застосовують її до елементів даних. Це не лише робить код <strong>коротшим і читабельнішим</strong>, а й значно <strong>підвищує його продуктивність</strong>, оскільки багато функціоналів реалізовані на рівні C.</p>
+<p>Основні функції сімейства <code>apply</code>:</p>
+<ul>
+<li><strong><code>lapply()</code></strong> — застосовує функцію до кожного елемента списку або вектора і <strong>завжди повертає список</strong>. Ідеальна для обробки колекцій датафреймів, файлів, моделей тощо.</li>
+<li><strong><code>sapply()</code></strong> — спрощена версія <code>lapply()</code>, яка намагається <strong>спростити результат</strong> до вектора або матриці (якщо це можливо).</li>
+<li><strong><code>vapply()</code></strong> — безпечна альтернатива <code>sapply()</code>, де ви <strong>вказуєте очікуваний тип результату</strong> (<code>FUN.VALUE</code>). Це запобігає неочікуваним помилкам і прискорює виконання.</li>
+<li><strong><code>mapply()</code></strong> — узагальнення <code>sapply()</code> для <strong>паралельної обробки кількох векторів</strong> (аналог <code>map2()</code> або <code>pmap()</code> з <code>purrr</code>).</li>
+<li><strong><code>apply()</code></strong> — застосовує функцію до <strong>рядків (1) або стовпців (2)</strong> матриці чи датафрейма. Корисна для агрегації, але часто може бути замінена на векторизовані функції (<code>rowSums()</code>, <code>colMeans()</code>), які ще швидші.</li>
+</ul>
+<p>Функціонали особливо ефективні в поєднанні з <strong>конвеєрами (<code>%&gt;%</code>)</strong> та <strong>анонімними функціями</strong>, що дозволяє будувати компактні, виразні та легко підтримувані ETL-процеси. Наприклад, завантаження та об’єднання кількох CSV-файлів зводиться до двох рядків:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>file_paths <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"data"</span>, <span class="at">pattern =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">.csv$"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>all_data <span class="ot">&lt;-</span> <span class="fu">lapply</span>(file_paths, read.csv) <span class="sc">%&gt;%</span> <span class="fu">bind_rows</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Цей підхід не лише замінює цикл, а й усуває потребу в проміжних змінних та ручному управлінні пам’яттю.</p>
+<p>Отже, <strong>функціональне програмування — це стандарт сучасної інженерії даних у R</strong>, і володіння сімейством <code>apply</code> є обов’язковою компетенцією для будь-якого Data Engineer.</p>
+<section id="робоче-завдання-2" class="level3">
+<h3 class="anchored" data-anchor-id="робоче-завдання-2">Робоче завдання 2</h3>
+<p>Опрацювати <a href="lab4_DE_2022_part2.R">чаастину 2</a></p>
+</section>
+</section>
+<section id="обробка-помилок-у-функціональному-стилі-trycatch-з-lapply" class="level2">
+<h2 class="anchored" data-anchor-id="обробка-помилок-у-функціональному-стилі-trycatch-з-lapply">Обробка помилок у функціональному стилі: <code>tryCatch()</code> з <code>lapply()</code></h2>
+<p>У реальних ETL-процесах дані часто містять аномалії: пошкоджені файли, недоступні URL, неочікувані типи даних. Якщо використовувати цикл <code>for</code> без обробки помилок, <strong>вся програма зупиниться на першій помилці</strong>. Це неприйнятно в інженерії даних, де важлива <strong>стійкість конвеєра</strong>.</p>
+<p>Замість цього ми вбудовуємо обробку помилок <strong>безпосередньо в функціонал</strong>, використовуючи <code>tryCatch()</code> разом з <code>lapply()</code> або <code>map()</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>safe_read_csv <span class="ot">&lt;-</span> <span class="cf">function</span>(path) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tryCatch</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read.csv</span>(path, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">message</span>(<span class="st">"❗ Помилка у файлі "</span>, path, <span class="st">": "</span>, e<span class="sc">$</span>message)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">tibble</span>(<span class="at">.rows =</span> <span class="dv">0</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># load all files</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>file_paths <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"data"</span>, <span class="at">pattern =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">.csv$"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>all_data <span class="ot">&lt;-</span> <span class="fu">lapply</span>(file_paths, safe_read_csv) <span class="sc">%&gt;%</span> <span class="fu">bind_rows</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Цей підхід має кілька переваг:</p>
+<ul>
+<li><p><strong>Конвеєр не переривається</strong> — обробка продовжується для всіх файлів.</p></li>
+<li><p><strong>Помилки логуються</strong> — ви знаєте, що пішло не так.</p></li>
+<li><p><strong>Результат залишається tidy</strong> — порожні таблиці не порушують структуру.</p></li>
+<li><p><strong>Функція чиста</strong> — не має побічних ефектів, легко тестується.</p></li>
+</ul>
+<blockquote class="blockquote">
+<p>💡 <strong>Порада</strong>: у production-коді замість <code>message()</code> часто використовують логування через пакет <code>logger</code> або запис у файл, але для навчальних цілей <code>message()</code> достатньо.</p>
+</blockquote>
+<p>Таким чином, <strong><code>tryCatch()</code> у поєднанні з функціоналами</strong> — це стандарт сучасної інженерії даних у R, який забезпечує надійність, читабельність і масштабованість коду.</p>
+</section>
+<section id="робоче-завдання" class="level2">
+<h2 class="anchored" data-anchor-id="робоче-завдання">Робоче завдання</h2>
+<ul>
+<li>Виконати <a href="#варіанти-індивідуальних-завдань">Індивідуальне завдання</a></li>
+</ul>
+</section>
+<section id="варіант-1" class="level2">
+<h2 class="anchored" data-anchor-id="варіант-1">Варіант 1</h2>
+<section id="тема-аналіз-якості-даних-у-папці-з-щомісячними-звітами" class="level3">
+<h3 class="anchored" data-anchor-id="тема-аналіз-якості-даних-у-папці-з-щомісячними-звітами"><strong>Тема: Аналіз якості даних у папці з щомісячними звітами</strong></h3>
+<p>Ви отримали папку <code>monthly_reports/</code>, яка містить <strong>12 CSV-файлів</strong> (<code>jan.csv</code>, <code>feb.csv</code>, …, <code>dec.csv</code>) зі звітами про продажі. Однак деякі файли можуть бути: - пошкодженими (неправильний формат, відсутні стовпці), - порожніми, - містити некоректні значення (негативні ціни, <code>NA</code> у ключових полях).</p>
+<p>Ваше завдання — побудувати <strong>надійний, оптимізований ETL-конвеєр</strong> у функціональному стилі.</p>
+<hr>
+</section>
+<section id="структура-даних" class="level3">
+<h3 class="anchored" data-anchor-id="структура-даних">Структура даних</h3>
+<p>Кожен файл має стовпці:<br>
+<code>product_id</code>, <code>region</code>, <code>units_sold</code>, <code>price_per_unit</code>, <code>discount_percent</code></p>
+<hr>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#expected column names</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>EXPECTED_COLS <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"product_id"</span>, <span class="st">"region"</span>, <span class="st">"units_sold"</span>, <span class="st">"price_per_unit"</span>, <span class="st">"discount_percent"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="завдання" class="level3">
+<h3 class="anchored" data-anchor-id="завдання">Завдання</h3>
+</section>
+<section id="етап-1-безпечне-завантаження-файлів" class="level3">
+<h3 class="anchored" data-anchor-id="етап-1-безпечне-завантаження-файлів"><strong>Етап 1: Безпечне завантаження файлів</strong></h3>
+<ul>
+<li>Створіть функцію <code>safe_read_report(path)</code>, яка:
+<ul>
+<li>використовує <code>tryCatch()</code> для перехоплення помилок при читанні;</li>
+<li>у разі помилки — виводить повідомлення через <code>message()</code> і повертає <strong>порожній tibble</strong> з правильними стовпцями;</li>
+<li>перевіряє наявність усіх 5 стовпців; якщо чогось не вистачає — повертає порожній tibble.</li>
+</ul></li>
+<li>Використовуйте <code>list.files()</code> + <code>lapply()</code> (або <code>map()</code>) для завантаження всіх файлів.</li>
+<li>Об’єднайте результат у єдину таблицю <code>all_sales</code>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>EXPECTED_COL_TYPES <span class="ot">&lt;-</span> <span class="fu">cols</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">product_id =</span> <span class="fu">col_character</span>(), </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">region =</span> <span class="fu">col_character</span>(), </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">units_sold =</span> <span class="fu">col_double</span>(),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">price_per_unit =</span> <span class="fu">col_double</span>(), </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">discount_percent =</span> <span class="fu">col_double</span>()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>safe_read_report <span class="ot">&lt;-</span> <span class="cf">function</span>(path) {</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># empty dataframe</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  empty_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">product_id =</span> <span class="fu">character</span>(), <span class="at">region =</span> <span class="fu">character</span>(), <span class="at">units_sold =</span> <span class="fu">double</span>(), </span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">price_per_unit =</span> <span class="fu">double</span>(), <span class="at">discount_percent =</span> <span class="fu">double</span>()</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  file_name <span class="ot">&lt;-</span> <span class="fu">basename</span>(path)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>({</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    d <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(path, <span class="at">col_types =</span> EXPECTED_COL_TYPES, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># colunms check</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">all</span>(<span class="fu">names</span>(EXPECTED_COL_TYPES<span class="sc">$</span>cols) <span class="sc">%in%</span> <span class="fu">names</span>(d))) {</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>      <span class="fu">message</span>(<span class="fu">sprintf</span>(<span class="st">"%s file has no key columns."</span>, file_name))</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(empty_df)</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(d)</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="fu">sprintf</span>(<span class="st">"read file error: %s. %s"</span>, file_name, e<span class="sc">$</span>message))</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(empty_df)</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df)</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>all_file_paths <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"data/monthly_reports"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>, <span class="at">pattern =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">.csv$"</span>)</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>file_info <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> all_file_paths,</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">file_name =</span> <span class="fu">basename</span>(all_file_paths)</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>all_sales_list <span class="ot">&lt;-</span> file_info <span class="sc">%&gt;%</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">map</span>(path, safe_read_report)</span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>aug.csv file has no key columns.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>feb.csv file has no key columns.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>all_sales <span class="ot">&lt;-</span> all_sales_list <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">.csv"</span>, <span class="st">""</span>, file_name)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(data) <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>path, <span class="sc">-</span>file_name) </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">loading and joining were ended. first rows all_sales:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+loading and joining were ended. first rows all_sales:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(all_sales))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 6
+  product_id region units_sold price_per_unit discount_percent month
+  &lt;chr&gt;      &lt;chr&gt;       &lt;dbl&gt;          &lt;dbl&gt;            &lt;dbl&gt; &lt;chr&gt;
+1 P11        North          24           34.8            23.7  apr  
+2 P10        North          17           79.9            27.7  apr  
+3 P14        East           25          -50              15.0  apr  
+4 P11        North          24           88.3             7.74 apr  
+5 &lt;NA&gt;       West           14           85.0             9.06 apr  
+6 P15        East           17           42.9            10.5  apr  </code></pre>
+</div>
+</div>
+</section>
+<section id="етап-2-оптимізована-обробка-даних" class="level3">
+<h3 class="anchored" data-anchor-id="етап-2-оптимізована-обробка-даних"><strong>Етап 2: Оптимізована обробка даних</strong></h3>
+<ul>
+<li>Додайте стовпець <code>month</code> на основі імені файлу (наприклад, <code>"jan"</code> → <code>"2024-01"</code>).</li>
+<li>Розрахуйте <code>revenue = units_sold * price_per_unit * (1 - discount_percent / 100)</code>.</li>
+<li>Використовуйте <strong>векторизовані операції</strong>, а не цикли.</li>
+<li>Для кожного місяця обчисліть:
+<ul>
+<li>загальний дохід (<code>total_revenue</code>),</li>
+<li>середню ціну (<code>avg_price</code>),</li>
+<li>кількість унікальних продуктів (<code>n_products</code>).</li>
+</ul></li>
+</ul>
+<blockquote class="blockquote">
+<p>💡 Використовуйте <code>group_by()</code> + <code>summarise()</code> — не <code>for</code>!</p>
+</blockquote>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>months <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"jan"</span>, <span class="st">"feb"</span>, <span class="st">"mar"</span>, <span class="st">"apr"</span>, <span class="st">"may"</span>, <span class="st">"jun"</span>, </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"jul"</span>, <span class="st">"aug"</span>, <span class="st">"sep"</span>, <span class="st">"oct"</span>, <span class="st">"nov"</span>, <span class="st">"dec"</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>aggregated_sales <span class="ot">&lt;-</span> all_sales <span class="sc">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">month_num =</span> <span class="fu">match</span>(month, months),</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">month_formatted =</span> <span class="fu">paste0</span>(<span class="st">"2024-"</span>, <span class="fu">sprintf</span>(<span class="st">"%02d"</span>, month_num)),</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">.before =</span> month</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>month, <span class="sc">-</span>month_num) <span class="sc">%&gt;%</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">month =</span> month_formatted) <span class="sc">%&gt;%</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># delete incorrect values</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(price_per_unit <span class="sc">&gt;=</span> <span class="dv">0</span>, units_sold <span class="sc">&gt;=</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calculate revenue</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">revenue =</span> units_sold <span class="sc">*</span> price_per_unit <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> discount_percent <span class="sc">/</span> <span class="dv">100</span>)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(month) <span class="sc">%&gt;%</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_revenue =</span> <span class="fu">sum</span>(revenue, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_price_weighted =</span> <span class="fu">sum</span>(price_per_unit <span class="sc">*</span> units_sold, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">sum</span>(units_sold, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_products =</span> <span class="fu">n_distinct</span>(product_id, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">agregated results:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+agregated results:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(aggregated_sales)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 4
+  month   total_revenue avg_price_weighted n_products
+  &lt;chr&gt;           &lt;dbl&gt;              &lt;dbl&gt;      &lt;int&gt;
+1 2024-01        11111.               53.5          4
+2 2024-03        11875.               65.6          4
+3 2024-04         8221.               51.5          5
+4 2024-05        10266.               59.1          4
+5 2024-07        12285.               51.4          3
+6 2024-09         8502.               47.8          5
+7 2024-10        19850.               76.3          6
+8 2024-11        12112.               62.2          5
+9 2024-12        16976.               73.7          6</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-3-аналіз-якості-даних" class="level3">
+<h3 class="anchored" data-anchor-id="етап-3-аналіз-якості-даних"><strong>Етап 3: Аналіз якості даних</strong></h3>
+<ul>
+<li>Визначте, <strong>скільки файлів було пошкоджено</strong> (порівняйте очікувану кількість файлів із реально завантаженими).</li>
+<li>Для кожного місяця обчисліть <strong>частку рядків з <code>NA</code></strong> у будь-якому стовпці.</li>
+<li>Використовуйте <code>colSums(is.na(...))</code> — не цикли!</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># number of expected files</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>expected_files <span class="ot">&lt;-</span> <span class="fu">length</span>(months)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># number of loaded files</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>loaded_files_count <span class="ot">&lt;-</span> all_sales_list <span class="sc">%&gt;%</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># check Data Frames doesn't empty</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">is_empty =</span> <span class="fu">map_lgl</span>(data, <span class="sc">~</span> <span class="fu">nrow</span>(.x) <span class="sc">==</span> <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">success_count =</span> <span class="fu">sum</span>(<span class="sc">!</span>is_empty),</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">failure_count =</span> <span class="fu">sum</span>(is_empty)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"number of succesfyly loaded files: %d</span><span class="sc">\n</span><span class="st">"</span>, loaded_files_count<span class="sc">$</span>success_count))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>number of succesfyly loaded files: 9</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"number of empty/destroyed files: %d</span><span class="sc">\n</span><span class="st">"</span>, loaded_files_count<span class="sc">$</span>failure_count))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>number of empty/destroyed files: 3</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>na_analysis <span class="ot">&lt;-</span> all_sales <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(month) <span class="sc">%&gt;%</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># number of NA in every column</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_rows =</span> <span class="fu">n</span>(),</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_na_rows =</span> <span class="fu">sum</span>(<span class="fu">rowSums</span>(<span class="fu">is.na</span>(<span class="fu">select</span>(<span class="fu">cur_data</span>(), <span class="fu">everything</span>()))) <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">na_row_proportion =</span> n_na_rows <span class="sc">/</span> total_rows</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">part of rows with NA (by month):</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+part of rows with NA (by month):</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(na_analysis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 4
+  month total_rows n_na_rows na_row_proportion
+  &lt;chr&gt;      &lt;int&gt;     &lt;int&gt;             &lt;dbl&gt;
+1 apr           10         1               0.1
+2 dec           10         1               0.1
+3 jan           10         1               0.1
+4 jul           10         0               0  
+5 mar           10         2               0.2
+6 may           10         2               0.2
+7 nov           10         2               0.2
+8 oct           10         1               0.1
+9 sep           10         1               0.1</code></pre>
+</div>
+</div>
+<section id="етап-4-порівняння-підходів-на-прикладі" class="level4">
+<h4 class="anchored" data-anchor-id="етап-4-порівняння-підходів-на-прикладі"><strong>Етап 4: Порівняння підходів (на прикладі)</strong></h4>
+<ul>
+<li>Напишіть <strong>один і той самий розрахунок</strong> двома способами:
+<ol type="1">
+<li>За допомогою <code>for</code>-циклу (для демонстрації).</li>
+<li>За допомогою <code>vapply()</code> або <code>sapply()</code>.</li>
+</ol></li>
+<li>Порівняйте швидкість за допомогою <code>system.time()</code> (не обов’язково в звіті, але для розуміння).</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># avarage units_sold per month</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>data_for_comparison <span class="ot">&lt;-</span> all_sales <span class="sc">%&gt;%</span> </span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">month_id =</span> <span class="fu">match</span>(month, months)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(month_id, units_sold)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>months_unique <span class="ot">&lt;-</span> <span class="fu">unique</span>(data_for_comparison<span class="sc">$</span>month_id)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>time_for_loop <span class="ot">&lt;-</span> <span class="fu">system.time</span>({</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  results_for <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (m_id <span class="cf">in</span> months_unique) {</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    avg_u <span class="ot">&lt;-</span> <span class="fu">mean</span>(data_for_comparison<span class="sc">$</span>units_sold[data_for_comparison<span class="sc">$</span>month_id <span class="sc">==</span> m_id], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    results_for[[<span class="fu">as.character</span>(m_id)]] <span class="ot">&lt;-</span> avg_u</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>time_sapply <span class="ot">&lt;-</span> <span class="fu">system.time</span>({</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  results_sapply <span class="ot">&lt;-</span> <span class="fu">sapply</span>(months_unique, <span class="cf">function</span>(m_id) {</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>(data_for_comparison<span class="sc">$</span>units_sold[data_for_comparison<span class="sc">$</span>month_id <span class="sc">==</span> m_id], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"results (first 5): </span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>results (first 5): </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"For: "</span>, <span class="fu">paste</span>(<span class="fu">round</span>(<span class="fu">head</span>(<span class="fu">unlist</span>(results_for)), <span class="dv">2</span>), <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>For:  20.9, 26.9, 22.6, 27.2, 20.3, 20.8 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"sapply:   "</span>, <span class="fu">paste</span>(<span class="fu">round</span>(<span class="fu">head</span>(results_sapply), <span class="dv">2</span>), <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>sapply:    20.9, 26.9, 22.6, 27.2, 20.3, 20.8 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">time:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+time:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">tibble</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Method =</span> <span class="fu">c</span>(<span class="st">"for"</span>, <span class="st">"sapply"</span>),</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Time =</span> <span class="fu">c</span>(time_for_loop[<span class="st">"elapsed"</span>], time_sapply[<span class="st">"elapsed"</span>])</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  Method  Time
+  &lt;chr&gt;  &lt;dbl&gt;
+1 for        0
+2 sapply     0</code></pre>
+</div>
+</div>
+<p>На великих даних, функціональні/векторизовані підходи (sapply, map, dplyr) зазвичай значно швидші за явні for-цикли.</p>
+</section>
+</section>
+<section id="технічні-вимоги" class="level3">
+<h3 class="anchored" data-anchor-id="технічні-вимоги">Технічні вимоги</h3>
+<ul>
+<li>Увесь код має бути написаний у <strong>функціональному стилі</strong>.</li>
+<li><strong>Заборонено використовувати <code>for</code>, <code>while</code>, <code>repeat</code></strong> у основному рішенні (лише для порівняння в Етапі 4).</li>
+<li>Усі файли завантажуються з папки <code>data/monthly_reports/</code>.</li>
+<li>Конвеєр має бути <strong>відтворюваним</strong> і <strong>стійким до помилок</strong>.</li>
+</ul>
+<hr style="border: 1px solid #ddd; margin: 30px 0 10px 0;">
+<footer style="text-align: center; font-size: 0.9em; color: #666; padding: 15px; background: #f9f9f9; border-top: 1px solid #eee; margin-top: 20px;">
+  <p><strong>Виконав(ла): Ваше ПІБ</strong> | Група: <strong>Ваша група</strong> | Викладач: Сидоренко В.М.</p>
+  <p>Кременчуцький національний університет імені Михайла Остроградського © 2025</p>
+</footer>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

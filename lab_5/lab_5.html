@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Сидоренко Валерій">
+<meta name="dcterms.date" content="2025-11-06">
+
+<title>Лабораторна робота №5: Функціональне програмування та паралельні обчислення в R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="lab_5_files/libs/clipboard/clipboard.min.js"></script>
+<script src="lab_5_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="lab_5_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="lab_5_files/libs/quarto-html/popper.min.js"></script>
+<script src="lab_5_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="lab_5_files/libs/quarto-html/anchor.min.js"></script>
+<link href="lab_5_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="lab_5_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="lab_5_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="lab_5_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="lab_5_files/libs/bootstrap/bootstrap-fb20cf6cb377599d9fcbc751916eaf20.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-full toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#мета-роботи" id="toc-мета-роботи" class="nav-link active" data-scroll-target="#мета-роботи">Мета роботи</a></li>
+  <li><a href="#що-ви-будете-вміти-після-виконання-роботи" id="toc-що-ви-будете-вміти-після-виконання-роботи" class="nav-link" data-scroll-target="#що-ви-будете-вміти-після-виконання-роботи">Що ви будете вміти після виконання роботи?</a></li>
+  <li><a href="#вступ" id="toc-вступ" class="nav-link" data-scroll-target="#вступ">Вступ</a></li>
+  <li><a href="#функціональне-програмування-з-пакетом-purrr" id="toc-функціональне-програмування-з-пакетом-purrr" class="nav-link" data-scroll-target="#функціональне-програмування-з-пакетом-purrr">Функціональне програмування з пакетом <code>purrr</code></a>
+  <ul class="collapse">
+  <li><a href="#робоче-завдання-1" id="toc-робоче-завдання-1" class="nav-link" data-scroll-target="#робоче-завдання-1">Робоче завдання 1</a></li>
+  </ul></li>
+  <li><a href="#паралельні-обчислення-з-foreach" id="toc-паралельні-обчислення-з-foreach" class="nav-link" data-scroll-target="#паралельні-обчислення-з-foreach">Паралельні обчислення з <code>foreach</code></a>
+  <ul class="collapse">
+  <li><a href="#робоче-завдання-2" id="toc-робоче-завдання-2" class="nav-link" data-scroll-target="#робоче-завдання-2">Робоче завдання 2</a></li>
+  </ul></li>
+  <li><a href="#багатопоточність-через-pbapply-parallel-та-furrr" id="toc-багатопоточність-через-pbapply-parallel-та-furrr" class="nav-link" data-scroll-target="#багатопоточність-через-pbapply-parallel-та-furrr">Багатопоточність через <code>pbapply</code>, <code>parallel</code> та <code>furrr</code></a>
+  <ul class="collapse">
+  <li><a href="#робоче-завдання-3" id="toc-робоче-завдання-3" class="nav-link" data-scroll-target="#робоче-завдання-3">Робоче завдання 3</a></li>
+  </ul></li>
+  <li><a href="#просунута-багатопоточність-з-пакетом-future" id="toc-просунута-багатопоточність-з-пакетом-future" class="nav-link" data-scroll-target="#просунута-багатопоточність-з-пакетом-future">Просунута багатопоточність з пакетом <code>future</code></a>
+  <ul class="collapse">
+  <li><a href="#робоче-завдання-4" id="toc-робоче-завдання-4" class="nav-link" data-scroll-target="#робоче-завдання-4">Робоче завдання 4</a></li>
+  </ul></li>
+  <li><a href="#робоче-завдання" id="toc-робоче-завдання" class="nav-link" data-scroll-target="#робоче-завдання">Робоче завдання</a></li>
+  <li><a href="#варіант-1" id="toc-варіант-1" class="nav-link" data-scroll-target="#варіант-1">Варіант 1</a>
+  <ul class="collapse">
+  <li><a href="#тема-масштабований-аналіз-транзакційних-даних" id="toc-тема-масштабований-аналіз-транзакційних-даних" class="nav-link" data-scroll-target="#тема-масштабований-аналіз-транзакційних-даних">Тема: Масштабований аналіз транзакційних даних</a></li>
+  <li><a href="#завдання" id="toc-завдання" class="nav-link" data-scroll-target="#завдання">📌 Завдання</a></li>
+  <li><a href="#технічні-вимоги" id="toc-технічні-вимоги" class="nav-link" data-scroll-target="#технічні-вимоги">💡 Технічні вимоги</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content column-page-right" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Лабораторна робота №5: Функціональне програмування та паралельні обчислення в R</h1>
+<p class="subtitle lead">Інженерія даних | КрНУ ім. М. Остроградського</p>
+</div>
+
+
+
+<div class="quarto-title-meta column-page-right">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://www.linkedin.com/in/valeriy-sydorenko-6782279a/">Сидоренко Валерій</a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 6, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="мета-роботи" class="level2">
+<h2 class="anchored" data-anchor-id="мета-роботи">Мета роботи</h2>
+<p>Освоїти сучасні підходи до <em>функціонального програмування</em> за допомогою пакета <code>purrr</code> та навчитися <em>масштабувати обчислення</em> через <em>багатопоточність</em> (<code>foreach</code>, <code>furrr</code>, <code>future</code>). Навчитися будувати <em>ефективні, читабельні та масштабовані конвеєри обробки даних</em>, які можуть працювати з великими обсягами інформації або довготривалими операціями.</p>
+<hr>
+</section>
+<section id="що-ви-будете-вміти-після-виконання-роботи" class="level2">
+<h2 class="anchored" data-anchor-id="що-ви-будете-вміти-після-виконання-роботи">Що ви будете вміти після виконання роботи?</h2>
+<ul>
+<li>Використовувати <strong>функції сімейства <code>map</code></strong> (<code>map_dfr</code>, <code>map2</code>, <code>pmap</code>) для елегантного перетворення списків, датафреймів та файлів.<br>
+</li>
+<li>Застосовувати <strong>функції <code>walk</code></strong> для побічних ефектів (наприклад, запис файлів) без створення проміжних об’єктів.<br>
+</li>
+<li>Фільтрувати результати за допомогою <strong><code>keep()</code> та <code>discard()</code></strong> на основі умов.<br>
+</li>
+<li>Виконувати <strong>послідовні операції</strong> за допомогою <strong><code>reduce()</code> та <code>accumulate()</code></strong> (наприклад, ланцюжки <code>left_join</code>).<br>
+</li>
+<li>Реалізовувати <strong>багатопоточні обчислення</strong> через <code>foreach</code>, <code>furrr</code> та <code>future</code>.<br>
+</li>
+<li>Керувати <strong>ресурсами процесора</strong>, використовуючи <code>plan(multisession)</code> та <code>availableCores()</code>.<br>
+</li>
+<li>Будувати <strong>вкладені паралельні процеси</strong> та обробляти помилки в асинхронному середовищі.</li>
+</ul>
+<hr>
+</section>
+<section id="вступ" class="level2">
+<h2 class="anchored" data-anchor-id="вступ">Вступ</h2>
+<p>У світі інженерії даних продуктивність — це не розкіш, а необхідність. Навіть найелегантніший код стає марним, якщо він виконується годинами. Тому сучасний інженер даних повинен володіти <strong>двома ключовими компетенціями</strong>:</p>
+<ol type="1">
+<li><strong>Функціональне програмування</strong> — для створення <strong>чистого, модульного та легко підтримуваного коду</strong>.</li>
+<li><strong>Паралельні обчислення</strong> — для <strong>масштабування</strong> цього коду на багатоядерних системах.</li>
+</ol>
+<p>Ця лабораторна робота знайомить вас із:</p>
+<ul>
+<li><strong>Пакетом <code>purrr</code></strong> — який уніфікує підхід до ітерацій, замінюючи цикли на виразні, типізовані функціонали (<code>map_dfr</code>, <code>pmap</code>, <code>walk</code> тощо).</li>
+<li><strong>Інструментами паралелізму</strong>:
+<ul>
+<li><code>foreach</code> — для базової багатопоточності,<br>
+</li>
+<li><code>furrr</code> — для інтеграції <code>purrr</code> з паралельними обчисленнями,<br>
+</li>
+<li><code>future</code> — для просунутого керування процесами, включно з вкладеними ф’ючерсами та обробкою помилок.</li>
+</ul></li>
+</ul>
+<p>Ми працюватимемо з <strong>реалістичним сценарієм</strong>: генерація, фільтрація, аналіз та збереження транзакційних даних. Це дозволить нам побачити, як <strong>функціональний стиль</strong> поєднується з <strong>паралельними обчисленнями</strong> для створення production-ready конвеєрів.</p>
+</section>
+<section id="функціональне-програмування-з-пакетом-purrr" class="level2">
+<h2 class="anchored" data-anchor-id="функціональне-програмування-з-пакетом-purrr">Функціональне програмування з пакетом <code>purrr</code></h2>
+<p>Пакет <code>purrr</code> є частиною екосистеми <code>tidyverse</code> і надає сучасний, типізований підхід до функціонального програмування в R. Він добре інтегрується з конвеєрами (<code>%&gt;%</code>) і дозволяє замінити нетипізовані базові функції (наприклад, <code>lapply()</code>) на безпечніші та виразніші аналоги.</p>
+<section id="основні-переваги-purrr" class="level4">
+<h4 class="anchored" data-anchor-id="основні-переваги-purrr"><strong>Основні переваги <code>purrr</code></strong>:</h4>
+<ul>
+<li><p><strong>Типізовані функції</strong>: кожна функція чітко визначає тип вихідних даних (вектор, список, data.frame), що усуває неочікувані помилки.</p></li>
+<li><p><strong>Підтримка формул</strong>: можна використовувати короткий синтаксис через <code>~</code> (наприклад, <code>~ .x + .y</code> замість <code>function(x, y) x + y</code>).</p></li>
+<li><p><strong>Гнучкість аргументів</strong>: додаткові параметри функцій передаються безпосередньо в тіло виклику.</p></li>
+<li><p><strong>Інтеграція з обробкою помилок</strong>: легко поєднується з <code>tryCatch()</code> у функціональному стилі.</p></li>
+</ul>
+</section>
+<section id="сімейство-функцій-map_" class="level4">
+<h4 class="anchored" data-anchor-id="сімейство-функцій-map_"><strong>Сімейство функцій <code>map_*</code></strong>:</h4>
+<ul>
+<li><p><code>map()</code> — аналог <code>lapply()</code>, завжди повертає <strong>список</strong>.</p></li>
+<li><p><code>map_lgl()</code>, <code>map_chr()</code>, <code>map_int()</code>, <code>map_dbl()</code> — повертають <strong>вектори</strong> відповідного типу.</p></li>
+<li><p><code>map_dfr()</code> — об’єднує результати у <strong>один data.frame за рядками</strong> (корисно для генерації транзакцій).</p></li>
+<li><p><code>map_dfc()</code> — об’єднує за <strong>стовпцями</strong>.</p></li>
+</ul>
+</section>
+<section id="функції-для-роботи-з-кількома-обєктами" class="level4">
+<h4 class="anchored" data-anchor-id="функції-для-роботи-з-кількома-обєктами"><strong>Функції для роботи з кількома об’єктами</strong>:</h4>
+<ul>
+<li><p><code>map2()</code> — ітерує по <strong>двом</strong> об’єктам одночасно.</p></li>
+<li><p><code>pmap()</code> — ітерує по <strong>довільній кількості</strong> об’єктів (наприклад, по рядках таблиці параметрів).</p></li>
+</ul>
+</section>
+<section id="функції-для-побічних-ефектів" class="level4">
+<h4 class="anchored" data-anchor-id="функції-для-побічних-ефектів"><strong>Функції для побічних ефектів</strong>:</h4>
+<ul>
+<li><code>walk()</code>, <code>walk2()</code>, <code>pwalk()</code> — виконують дії без повернення результату (наприклад, запис файлів, виведення повідомлень, збереження графіків).</li>
+</ul>
+</section>
+<section id="фільтрація-та-композиція" class="level4">
+<h4 class="anchored" data-anchor-id="фільтрація-та-композиція"><strong>Фільтрація та композиція</strong>:</h4>
+<ul>
+<li><p><code>keep()</code> / <code>discard()</code> — фільтрують елементи списку за умовою.</p></li>
+<li><p><code>reduce()</code> / <code>accumulate()</code> — послідовно застосовують бінарну операцію (наприклад, ланцюжок <code>left_join</code>).</p></li>
+<li><p><code>invoke_map()</code> — застосовує <strong>різні функції</strong> до одного набору аргументів.</p></li>
+</ul>
+<p>Ці інструменти дозволяють писати <strong>чистий, модульний і легко підтримуваний код</strong>, який ідеально підходить для побудови ETL-конвеєрів у рамках інженерії даних.</p>
+</section>
+<section id="робоче-завдання-1" class="level3">
+<h3 class="anchored" data-anchor-id="робоче-завдання-1">Робоче завдання 1</h3>
+<p>Опрацювати <a href="lab5_DE_2022_part1.R">частину 1.</a></p>
+</section>
+</section>
+<section id="паралельні-обчислення-з-foreach" class="level2">
+<h2 class="anchored" data-anchor-id="паралельні-обчислення-з-foreach">Паралельні обчислення з <code>foreach</code></h2>
+<p>Конструкція <code>foreach</code> надає універсальний інтерфейс для організації паралельних обчислень у мові R. На відміну від звичайного циклу <code>for</code>, <code>foreach</code> дозволяє легко перемикатися між <strong>послідовним</strong> (<code>%do%</code>) та <strong>паралельним</strong> (<code>%dopar%</code>) режимами виконання, використовуючи різні бекенди, такі як <code>doFuture</code> або <code>doSNOW</code>.</p>
+<p>Цей підхід особливо ефективний для <strong>довготривалих операцій</strong>, наприклад:</p>
+<ul>
+<li><p>імітація мережевих запитів,</p></li>
+<li><p>обробка великих файлів,</p></li>
+<li><p>моделювання методом Монте-Карло.</p></li>
+</ul>
+<p>Ключові переваги <code>foreach</code>:</p>
+<ul>
+<li><p><strong>Простий синтаксис</strong>, схожий на звичайний цикл.</p></li>
+<li><p><strong>Гнучке об’єднання результатів</strong> через параметр <code>.combine</code> (наприклад, <code>dplyr::bind_rows</code>).</p></li>
+<li><p><strong>Легка інтеграція</strong> з існуючим кодом без необхідності повного переписування логіки.</p></li>
+</ul>
+<p>Хоча <code>foreach</code> не є частиною екосистеми <code>tidyverse</code>, він добре поєднується з <code>dplyr</code> та <code>purrr</code>, забезпечуючи перший крок до масштабування обчислень у рамках інженерії даних.</p>
+<section id="робоче-завдання-2" class="level3">
+<h3 class="anchored" data-anchor-id="робоче-завдання-2">Робоче завдання 2</h3>
+<p>Опрацювати <a href="lab5_DE_2022_part2.R">частину 2.</a></p>
+</section>
+</section>
+<section id="багатопоточність-через-pbapply-parallel-та-furrr" class="level2">
+<h2 class="anchored" data-anchor-id="багатопоточність-через-pbapply-parallel-та-furrr">Багатопоточність через <code>pbapply</code>, <code>parallel</code> та <code>furrr</code></h2>
+<p>Для інтеграції паралелізму з сучасними підходами до обробки даних використовуються спеціалізовані пакети:</p>
+<ul>
+<li><p><strong><code>pbapply</code></strong> додає <strong>вбудований прогрес-бар</strong> до паралельних версій <code>lapply()</code> (<code>pblapply()</code>), що критично важливо для моніторингу тривалих процесів.</p></li>
+<li><p><strong><code>parallel</code></strong> надає <strong>низькорівневий контроль</strong> через <code>makeCluster()</code> та <code>parLapply()</code>, що корисно для тонкої настройки ресурсів у production-середовищах.</p></li>
+<li><p><strong><code>furrr</code></strong> — це <strong>багатопоточна реалізація пакета <code>purrr</code></strong>, яка дозволяє замінити <code>map2()</code> на <code>future_map2()</code> одним рядком, зберігаючи всю виразність функціонального стилю.</p></li>
+</ul>
+<p>Ці інструменти дозволяють <strong>масштабувати існуючі конвеєри</strong> без зміни їхньої логіки, що робить їх ідеальними для інженерії даних, де важливо поєднувати <strong>читабельність коду з продуктивністю</strong>.</p>
+<section id="робоче-завдання-3" class="level3">
+<h3 class="anchored" data-anchor-id="робоче-завдання-3">Робоче завдання 3</h3>
+<p>Опрацювати <a href="lab5_DE_2022_part3.R">частину 3.</a></p>
+</section>
+</section>
+<section id="просунута-багатопоточність-з-пакетом-future" class="level2">
+<h2 class="anchored" data-anchor-id="просунута-багатопоточність-з-пакетом-future">Просунута багатопоточність з пакетом <code>future</code></h2>
+<p>Пакет <code>future</code> пропонує <strong>універсальний, модульний підхід до асинхронних обчислень</strong>. Він дозволяє створювати <strong>ф’ючерси</strong> — об’єкти, які представляють результат, що буде обчислений у майбутньому. Ключові можливості:</p>
+<ul>
+<li><strong>Явне</strong> (<code>future({...})</code>) та <strong>неявне</strong> (<code>x %&lt;-% {...}</code>) оголошення ф’ючерсів.</li>
+<li><strong>Гнучке керування планом виконання</strong>: <code>sequential</code>, <code>multisession</code>, <code>cluster</code>.</li>
+<li><strong>Вкладені ф’ючерси</strong> для складних ієрархічних обчислень (наприклад, паралельна обробка файлів, кожен з яких містить паралельні підпроцеси).</li>
+<li><strong>Безпечна обробка помилок</strong> через <code>resolved()</code> та <code>backtrace()</code>.</li>
+<li><strong>Інтеграція з <code>promises</code></strong> для створення реактивних конвеєрів з прогрес-баром.</li>
+</ul>
+<p>Це найпотужніший інструмент у арсеналі інженера даних для побудови <strong>масштабованих, надійних та ефективних ETL-процесів</strong>, які можуть працювати на локальній багатоядерній машині, у хмарі або на кластері.</p>
+<section id="робоче-завдання-4" class="level3">
+<h3 class="anchored" data-anchor-id="робоче-завдання-4">Робоче завдання 4</h3>
+<p>Опрацювати <a href="lab5_DE_2022_part4.R">частину 4.</a></p>
+</section>
+</section>
+<section id="робоче-завдання" class="level2">
+<h2 class="anchored" data-anchor-id="робоче-завдання">Робоче завдання</h2>
+</section>
+<section id="варіант-1" class="level2">
+<h2 class="anchored" data-anchor-id="варіант-1">Варіант 1</h2>
+<section id="тема-масштабований-аналіз-транзакційних-даних" class="level3">
+<h3 class="anchored" data-anchor-id="тема-масштабований-аналіз-транзакційних-даних">Тема: Масштабований аналіз транзакційних даних</h3>
+<p>Ви отримали <strong>7 файлів</strong> (<code>transaction_1.csv</code> – <code>transaction_7.csv</code>), кожен з яких містить дані про одну транзакцію (як у прикладі). Однак у реальному сценарії таких файлів може бути <strong>тисячі</strong>, і обробка їх послідовно займе неприйнятно багато часу.</p>
+<p>Ваше завдання — побудувати <strong>масштабований, надійний та оптимізований ETL-конвеєр</strong>, який:</p>
+<ol type="1">
+<li>Безпечно завантажує всі файли (навіть якщо деякі пошкоджені)</li>
+<li>Агрегує дані</li>
+<li>Виконує аналіз</li>
+<li>Зберігає результати — <strong>все це з використанням функціонального програмування та паралельних обчислень</strong>.</li>
+</ol>
+<hr>
+</section>
+<section id="завдання" class="level3">
+<h3 class="anchored" data-anchor-id="завдання">📌 Завдання</h3>
+<section id="етап-1-функціональне-завантаження-та-фільтрація-purrr" class="level4">
+<h4 class="anchored" data-anchor-id="етап-1-функціональне-завантаження-та-фільтрація-purrr"><strong>Етап 1: Функціональне завантаження та фільтрація (purrr)</strong></h4>
+<ul>
+<li>Створіть функцію <code>safe_read_transaction(path)</code>, яка використовує <code>tryCatch()</code> для безпечного читання CSV.</li>
+<li>Використовуйте <code>list.files()</code> + <code>map()</code> для завантаження всіх файлів.</li>
+<li>Відфільтруйте транзакції з <strong>загальною сумою (<code>sale_sum</code>) ≥ 1000</strong> за допомогою <code>keep()</code>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>safe_read_transaction <span class="ot">&lt;-</span> <span class="cf">function</span>(path) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tryCatch</span>(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      data <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      <span class="co"># data validation</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="sc">!</span><span class="st">"sale_sum"</span> <span class="sc">%in%</span> <span class="fu">names</span>(data) <span class="sc">||</span> <span class="sc">!</span><span class="fu">is.numeric</span>(data<span class="sc">$</span>sale_sum) <span class="sc">||</span> <span class="fu">nrow</span>(data) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">stop</span>(<span class="st">"'sale_sum' is empty"</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(data)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">warning</span>(<span class="fu">paste</span>(<span class="st">"error in:"</span>, path, <span class="st">"</span><span class="sc">\n</span><span class="st">  reason:"</span>, e<span class="sc">$</span>message))</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="co"># return NULL for fale</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># get data path</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>file_paths <span class="ot">&lt;-</span> <span class="fu">list.files</span>(</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">"data/transactions."</span>, </span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">pattern =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">.csv$"</span>, </span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">full.names =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"Found"</span>, <span class="fu">length</span>(file_paths), <span class="st">"files...</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Found 7 files...</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> <span class="fu">map</span>(file_paths, safe_read_transaction)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># compact() deletes NULL results</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>successful_transactions <span class="ot">&lt;-</span> <span class="fu">compact</span>(all_results)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"sucsessfuly loaded and validated:"</span>, <span class="fu">length</span>(successful_transactions), <span class="st">"files.</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>sucsessfuly loaded and validated: 7 files.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"couldn't validate:"</span>, <span class="fu">length</span>(all_results) <span class="sc">-</span> <span class="fu">length</span>(successful_transactions), <span class="st">"files.</span><span class="sc">\n\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>couldn't validate: 0 files.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>high_value_transactions <span class="ot">&lt;-</span> <span class="fu">keep</span>(successful_transactions, <span class="sc">~</span> .x<span class="sc">$</span>sale_sum[<span class="dv">1</span>] <span class="sc">&gt;=</span> <span class="dv">1000</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"number of transaction with sale_sum &gt;= 1000:"</span>, <span class="fu">length</span>(high_value_transactions), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>number of transaction with sale_sum &gt;= 1000: 5 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># saving results</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>final_filtered_data <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(high_value_transactions)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(final_filtered_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 45 × 10
+    ...1 product_id name        price date       manager  clients count sale_sum
+   &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;       &lt;dbl&gt; &lt;date&gt;     &lt;chr&gt;    &lt;chr&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+ 1     1          4 PC           1500 2025-10-15 Svetlana client…     1     1500
+ 2     2          6 TV            700 2025-10-15 Svetlana client…     2     1400
+ 3     3         10 Tablet        150 2025-10-15 Svetlana client…     3      450
+ 4     4          5 Playstation  1000 2025-10-15 Svetlana client…     2     2000
+ 5     5          2 Smarthphone   850 2025-10-15 Svetlana client…     3     2550
+ 6     6          7 XBox          870 2025-10-15 Svetlana client…     1      870
+ 7     7          3 Smart watch   380 2025-10-15 Svetlana client…     3     1140
+ 8     8          8 Wifi router    80 2025-10-15 Svetlana client…     2      160
+ 9     9          1 Notebook     1000 2025-10-15 Svetlana client…     2     2000
+10     1          1 Notebook     1000 2025-10-17 Ivan     client…     3     3000
+# ℹ 35 more rows
+# ℹ 1 more variable: transaction_id &lt;dbl&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-2-послідовна-агрегація-reduce" class="level4">
+<h4 class="anchored" data-anchor-id="етап-2-послідовна-агрегація-reduce"><strong>Етап 2: Послідовна агрегація (reduce)</strong></h4>
+<ul>
+<li>Об’єднайте всі транзакції в єдину таблицю за допомогою <code>reduce(bind_rows)</code>.</li>
+<li>Додайте стовпець <code>file_id</code> на основі імені файлу.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>all_transactions_combined <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(successful_transactions, <span class="at">.id =</span> <span class="st">"file_path"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>all_transactions_with_id <span class="ot">&lt;-</span> all_transactions_combined <span class="sc">%&gt;%</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># create file_id from full path</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">file_id =</span> fs<span class="sc">::</span><span class="fu">path_file</span>(file_path),      <span class="co"># "transaction_1.csv"</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">file_id =</span> fs<span class="sc">::</span><span class="fu">path_ext_remove</span>(file_id) <span class="co"># "transaction_1"</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># select columns</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(file_id, file_path, <span class="fu">everything</span>())</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"joined table</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>joined table</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(all_transactions_with_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 63 × 12
+   file_id file_path  ...1 product_id name      price date       manager clients
+   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt; &lt;date&gt;     &lt;chr&gt;   &lt;chr&gt;  
+ 1 1       1             1         10 Tablet      150 2025-10-09 Ivan    client…
+ 2 1       1             2          3 Smart wa…   380 2025-10-09 Ivan    client…
+ 3 1       1             3          6 TV          700 2025-10-09 Ivan    client…
+ 4 1       1             4          9 Air cond…   500 2025-10-09 Ivan    client…
+ 5 1       1             5          2 Smarthph…   850 2025-10-09 Ivan    client…
+ 6 1       1             6          1 Notebook   1000 2025-10-09 Ivan    client…
+ 7 1       1             7          7 XBox        870 2025-10-09 Ivan    client…
+ 8 1       1             8          5 Playstat…  1000 2025-10-09 Ivan    client…
+ 9 1       1             9          4 PC         1500 2025-10-09 Ivan    client…
+10 2       2             1          4 PC         1500 2025-10-15 Svetla… client…
+# ℹ 53 more rows
+# ℹ 3 more variables: count &lt;dbl&gt;, sale_sum &lt;dbl&gt;, transaction_id &lt;dbl&gt;</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># filterring</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">filtered table (&gt;= 1000) after joining</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+filtered table (&gt;= 1000) after joining</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>final_high_value_table <span class="ot">&lt;-</span> all_transactions_with_id <span class="sc">%&gt;%</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(sale_sum <span class="sc">&gt;=</span> <span class="dv">1000</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(final_high_value_table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 35 × 12
+   file_id file_path  ...1 product_id name      price date       manager clients
+   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt; &lt;date&gt;     &lt;chr&gt;   &lt;chr&gt;  
+ 1 1       1             3          6 TV          700 2025-10-09 Ivan    client…
+ 2 1       1             4          9 Air cond…   500 2025-10-09 Ivan    client…
+ 3 1       1             6          1 Notebook   1000 2025-10-09 Ivan    client…
+ 4 1       1             8          5 Playstat…  1000 2025-10-09 Ivan    client…
+ 5 1       1             9          4 PC         1500 2025-10-09 Ivan    client…
+ 6 2       2             1          4 PC         1500 2025-10-15 Svetla… client…
+ 7 2       2             2          6 TV          700 2025-10-15 Svetla… client…
+ 8 2       2             4          5 Playstat…  1000 2025-10-15 Svetla… client…
+ 9 2       2             5          2 Smarthph…   850 2025-10-15 Svetla… client…
+10 2       2             7          3 Smart wa…   380 2025-10-15 Svetla… client…
+# ℹ 25 more rows
+# ℹ 3 more variables: count &lt;dbl&gt;, sale_sum &lt;dbl&gt;, transaction_id &lt;dbl&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-3-паралельний-аналіз-foreach-furrr" class="level4">
+<h4 class="anchored" data-anchor-id="етап-3-паралельний-аналіз-foreach-furrr"><strong>Етап 3: Паралельний аналіз (foreach + furrr)</strong></h4>
+<ul>
+<li>Напишіть функцію <code>analyze_manager(df)</code>, яка для кожного менеджера рахує:
+<ul>
+<li>кількість транзакцій,</li>
+<li>загальну суму продажів,</li>
+<li>середній чек.</li>
+</ul></li>
+<li>Виконайте цей аналіз <strong>двома способами</strong>:
+<ol type="1">
+<li>За допомогою <code>foreach(..., .combine = bind_rows) %dopar%</code>.</li>
+<li>За допомогою <code>future_map_dfr()</code> з <code>furrr</code>.</li>
+</ol></li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(doFuture)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(furrr)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>analyze_manager <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># df - transactions for one manager</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    df,</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">transaction_count =</span> <span class="fu">n</span>(),</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_sales =</span> <span class="fu">sum</span>(sale_sum),</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_sale =</span> <span class="fu">mean</span>(sale_sum),</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">'drop'</span> <span class="co"># for summarize</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>nested_data <span class="ot">&lt;-</span> all_transactions_combined <span class="sc">%&gt;%</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(manager) <span class="sc">%&gt;%</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_nest</span>()</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st"> data ready to paralelism (nested_data):</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ data ready to paralelism (nested_data):</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(nested_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 2
+  manager                 data
+  &lt;chr&gt;    &lt;list&lt;tibble[,10]&gt;&gt;
+1 Andrey              [9 × 10]
+2 Ivan               [45 × 10]
+3 Svetlana            [9 × 10]</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plan</span>(multisession, <span class="at">workers =</span> <span class="dv">4</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Paralel backend starts with "</span>, <span class="fu">nbrOfWorkers</span>(), <span class="st">"emploees</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Paralel backend starts with  4 emploees</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">registerDoFuture</span>()</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">analise with foreach %dopar% ...</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+analise with foreach %dopar% ...</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># iterate managers by names</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>foreach_results <span class="ot">&lt;-</span> <span class="fu">foreach</span>(</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mgr_name =</span> nested_data<span class="sc">$</span>manager,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mgr_data =</span> nested_data<span class="sc">$</span>data,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">.combine =</span> bind_rows</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%dopar%</span> {</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># call analize function for manager</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  stats <span class="ot">&lt;-</span> <span class="fu">analyze_manager</span>(mgr_data)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add manager's name to result</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(stats, <span class="at">manager =</span> mgr_name, <span class="at">.before =</span> <span class="dv">1</span>)</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"result (foreach): </span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>result (foreach): </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(foreach_results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 4
+  manager  transaction_count total_sales avg_sale
+  &lt;chr&gt;                &lt;int&gt;       &lt;dbl&gt;    &lt;dbl&gt;
+1 Andrey                   9       16500    1833.
+2 Ivan                    45       65910    1465.
+3 Svetlana                 9       12070    1341.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">analize whith future_map_dfr() ...</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+analize whith future_map_dfr() ...</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>input_list <span class="ot">&lt;-</span> <span class="fu">set_names</span>(nested_data<span class="sc">$</span>data, nested_data<span class="sc">$</span>manager)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>furrr_results <span class="ot">&lt;-</span> <span class="fu">future_map_dfr</span>(</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  input_list, </span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  analyze_manager, </span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">.id =</span> <span class="st">"manager"</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"result (furrr):</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>result (furrr):</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(furrr_results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 4
+  manager  transaction_count total_sales avg_sale
+  &lt;chr&gt;                &lt;int&gt;       &lt;dbl&gt;    &lt;dbl&gt;
+1 Andrey                   9       16500    1833.
+2 Ivan                    45       65910    1465.
+3 Svetlana                 9       12070    1341.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># stop from paralel backend</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plan</span>(sequential)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">paralel back-end was stoped</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+paralel back-end was stoped</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-4-просунута-багатопоточність-future" class="level4">
+<h4 class="anchored" data-anchor-id="етап-4-просунута-багатопоточність-future"><strong>Етап 4: Просунута багатопоточність (future)</strong></h4>
+<ul>
+<li>Створіть <strong>вкладені ф’ючерси</strong>:
+<ul>
+<li>Зовнішній ф’ючерс — для кожного файлу.</li>
+<li>Внутрішній ф’ючерс — для обробки кожного рядка (наприклад, валідація ціни).</li>
+</ul></li>
+<li>Використовуйте <code>plan(list(multisession, multisession))</code>.</li>
+<li>Додайте обробку помилок через <code>resolved()</code> та <code>backtrace()</code>.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(future)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(furrr)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>validate_row <span class="ot">&lt;-</span> <span class="cf">function</span>(row_num, row_data) {</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tryCatch</span>({</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># error no data</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.na</span>(row_data<span class="sc">$</span>quantity) <span class="sc">||</span> <span class="fu">is.na</span>(row_data<span class="sc">$</span>price) <span class="sc">||</span> <span class="fu">is.na</span>(row_data<span class="sc">$</span>price_check_sum)) {</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="st">"No data. coudn't validate."</span>)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># error business logic</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    calculated_sum <span class="ot">&lt;-</span> row_data<span class="sc">$</span>quantity <span class="sc">*</span> row_data<span class="sc">$</span>price</span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (calculated_sum <span class="sc">!=</span> row_data<span class="sc">$</span>price_check_sum) {</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="fu">paste0</span>(<span class="st">"unexpected control summ. expected: "</span>, </span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>                  calculated_sum, <span class="st">", got: "</span>, row_data<span class="sc">$</span>price_check_sum))</span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">status =</span> <span class="st">"success"</span>, </span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">row =</span> row_num, </span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">item =</span> row_data<span class="sc">$</span>item_id</span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb39-25"><a href="#cb39-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb39-26"><a href="#cb39-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">status =</span> <span class="st">"error"</span>, </span>
+<span id="cb39-27"><a href="#cb39-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">row =</span> row_num, </span>
+<span id="cb39-28"><a href="#cb39-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">item =</span> row_data<span class="sc">$</span>item_id, </span>
+<span id="cb39-29"><a href="#cb39-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">message =</span> e<span class="sc">$</span>message</span>
+<span id="cb39-30"><a href="#cb39-30" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb39-31"><a href="#cb39-31" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb39-32"><a href="#cb39-32" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb39-33"><a href="#cb39-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-34"><a href="#cb39-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-35"><a href="#cb39-35" aria-hidden="true" tabindex="-1"></a><span class="co"># first futures (work with each file)</span></span>
+<span id="cb39-36"><a href="#cb39-36" aria-hidden="true" tabindex="-1"></a>process_file <span class="ot">&lt;-</span> <span class="cf">function</span>(path) {</span>
+<span id="cb39-37"><a href="#cb39-37" aria-hidden="true" tabindex="-1"></a>  <span class="co"># first level</span></span>
+<span id="cb39-38"><a href="#cb39-38" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb39-39"><a href="#cb39-39" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb39-40"><a href="#cb39-40" aria-hidden="true" tabindex="-1"></a>  required_cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"item_id"</span>, <span class="st">"quantity"</span>, <span class="st">"price"</span>, <span class="st">"price_check_sum"</span>)</span>
+<span id="cb39-41"><a href="#cb39-41" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">all</span>(required_cols <span class="sc">%in%</span> <span class="fu">names</span>(data))) {</span>
+<span id="cb39-42"><a href="#cb39-42" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"file doesn't have some columns (e.g. 'price_check_sum')."</span>)</span>
+<span id="cb39-43"><a href="#cb39-43" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb39-44"><a href="#cb39-44" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb39-45"><a href="#cb39-45" aria-hidden="true" tabindex="-1"></a>  <span class="co"># split dataframe to list of rows</span></span>
+<span id="cb39-46"><a href="#cb39-46" aria-hidden="true" tabindex="-1"></a>  rows_list <span class="ot">&lt;-</span> <span class="fu">split</span>(data, <span class="fu">seq</span>(<span class="fu">nrow</span>(data)))</span>
+<span id="cb39-47"><a href="#cb39-47" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb39-48"><a href="#cb39-48" aria-hidden="true" tabindex="-1"></a>  <span class="co"># internal fututes</span></span>
+<span id="cb39-49"><a href="#cb39-49" aria-hidden="true" tabindex="-1"></a>  inner_futures <span class="ot">&lt;-</span> <span class="fu">imap</span>(rows_list, <span class="sc">~</span> {</span>
+<span id="cb39-50"><a href="#cb39-50" aria-hidden="true" tabindex="-1"></a>    row_num <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(.y)</span>
+<span id="cb39-51"><a href="#cb39-51" aria-hidden="true" tabindex="-1"></a>    row_tibble <span class="ot">&lt;-</span> .x</span>
+<span id="cb39-52"><a href="#cb39-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">future</span>({</span>
+<span id="cb39-53"><a href="#cb39-53" aria-hidden="true" tabindex="-1"></a>      <span class="fu">validate_row</span>(row_num, row_tibble)</span>
+<span id="cb39-54"><a href="#cb39-54" aria-hidden="true" tabindex="-1"></a>    }, <span class="at">seed =</span> <span class="cn">TRUE</span>) <span class="co"># seed = TRUE - just must to be here, good practise, IDK :(</span></span>
+<span id="cb39-55"><a href="#cb39-55" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb39-56"><a href="#cb39-56" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb39-57"><a href="#cb39-57" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 4. join internal results</span></span>
+<span id="cb39-58"><a href="#cb39-58" aria-hidden="true" tabindex="-1"></a>  inner_results <span class="ot">&lt;-</span> <span class="fu">values</span>(inner_futures)</span>
+<span id="cb39-59"><a href="#cb39-59" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb39-60"><a href="#cb39-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">file =</span> path, <span class="at">results =</span> inner_results))</span>
+<span id="cb39-61"><a href="#cb39-61" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb39-62"><a href="#cb39-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-63"><a href="#cb39-63" aria-hidden="true" tabindex="-1"></a><span class="co"># setting up plans.</span></span>
+<span id="cb39-64"><a href="#cb39-64" aria-hidden="true" tabindex="-1"></a><span class="fu">plan</span>(<span class="fu">list</span>(</span>
+<span id="cb39-65"><a href="#cb39-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tweak</span>(multisession, <span class="at">workers =</span> <span class="dv">2</span>), <span class="co"># plan for first futures (files)</span></span>
+<span id="cb39-66"><a href="#cb39-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tweak</span>(multisession, <span class="at">workers =</span> <span class="dv">4</span>)  <span class="co"># plan for internal futures (rows)</span></span>
+<span id="cb39-67"><a href="#cb39-67" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb39-68"><a href="#cb39-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-69"><a href="#cb39-69" aria-hidden="true" tabindex="-1"></a><span class="co"># nbrOfWorkers() give number of workers for first plan</span></span>
+<span id="cb39-70"><a href="#cb39-70" aria-hidden="true" tabindex="-1"></a>outer_workers_count <span class="ot">&lt;-</span> <span class="fu">nbrOfWorkers</span>()</span>
+<span id="cb39-71"><a href="#cb39-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-72"><a href="#cb39-72" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste0</span>(</span>
+<span id="cb39-73"><a href="#cb39-73" aria-hidden="true" tabindex="-1"></a>  <span class="st">"set up 2nd plan</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb39-74"><a href="#cb39-74" aria-hidden="true" tabindex="-1"></a>  <span class="st">"files: "</span>, outer_workers_count, <span class="st">" workers</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb39-75"><a href="#cb39-75" aria-hidden="true" tabindex="-1"></a>  <span class="st">"rows: 4 workers(like in the task)</span><span class="sc">\n\n</span><span class="st">"</span></span>
+<span id="cb39-76"><a href="#cb39-76" aria-hidden="true" tabindex="-1"></a>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>set up 2nd plan
+files: 2 workers
+rows: 4 workers(like in the task)</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co">#start external futures</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>file_paths <span class="ot">&lt;-</span> <span class="fu">list.files</span>(</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">"transactions"</span>, </span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">pattern =</span> <span class="st">"^transaction_.*</span><span class="sc">\\</span><span class="st">.csv$"</span>, </span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">full.names =</span> <span class="cn">TRUE</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"start of"</span>, <span class="fu">length</span>(file_paths), <span class="st">"external futures(one for each file)...</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>start of 0 external futures(one for each file)...</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>outer_futures <span class="ot">&lt;-</span> <span class="fu">map</span>(file_paths, <span class="sc">~</span> {</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># future() for first plan</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">future</span>({</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># work with file</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">process_file</span>(.)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  }, <span class="at">seed =</span> <span class="cn">TRUE</span>, <span class="at">.globals =</span> <span class="fu">c</span>(<span class="st">"validate_row"</span>, <span class="st">"process_file"</span>)) </span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">results</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+results</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>all_errors <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(outer_futures)) {</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  f <span class="ot">&lt;-</span> outer_futures[[i]]</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  path <span class="ot">&lt;-</span> file_paths[[i]]</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Обробка файлу:"</span>, <span class="fu">basename</span>(path), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">wait</span>(f) </span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">resolved</span>(f)) {</span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>    result_or_error <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>      {</span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(<span class="at">status =</span> <span class="st">"success"</span>, <span class="at">data =</span> <span class="fu">value</span>(f))</span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>      },</span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(<span class="at">status =</span> <span class="st">"error"</span>, <span class="at">error =</span> e, <span class="at">traceback =</span> f<span class="sc">$</span>traceback)</span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (result_or_error<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"success"</span>) {</span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-25"><a href="#cb45-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">cat</span>(<span class="st">"  file level: sucsessfuly loaded and analise.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-26"><a href="#cb45-26" aria-hidden="true" tabindex="-1"></a>      all_results[[path]] <span class="ot">&lt;-</span> result_or_error<span class="sc">$</span>data<span class="sc">$</span>results</span>
+<span id="cb45-27"><a href="#cb45-27" aria-hidden="true" tabindex="-1"></a>      <span class="fu">walk</span>(result_or_error<span class="sc">$</span>data<span class="sc">$</span>results, <span class="sc">~</span> {</span>
+<span id="cb45-28"><a href="#cb45-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (.x<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"success"</span>) {</span>
+<span id="cb45-29"><a href="#cb45-29" aria-hidden="true" tabindex="-1"></a>          <span class="fu">cat</span>(<span class="fu">paste0</span>(<span class="st">"    row level ("</span>, .x<span class="sc">$</span>item, <span class="st">"): sucsessfuly validated.</span><span class="sc">\n</span><span class="st">"</span>))</span>
+<span id="cb45-30"><a href="#cb45-30" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">else</span> {</span>
+<span id="cb45-31"><a href="#cb45-31" aria-hidden="true" tabindex="-1"></a>          <span class="fu">cat</span>(<span class="fu">paste0</span>(<span class="st">"    row level ("</span>, .x<span class="sc">$</span>item, <span class="st">"): error: "</span>, .x<span class="sc">$</span>message, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span>
+<span id="cb45-32"><a href="#cb45-32" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb45-33"><a href="#cb45-33" aria-hidden="true" tabindex="-1"></a>      })</span>
+<span id="cb45-34"><a href="#cb45-34" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb45-35"><a href="#cb45-35" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb45-36"><a href="#cb45-36" aria-hidden="true" tabindex="-1"></a>      <span class="fu">cat</span>(<span class="fu">paste0</span>(<span class="st">"  file level: critical error: "</span>, result_or_error<span class="sc">$</span>error<span class="sc">$</span>message, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span>
+<span id="cb45-37"><a href="#cb45-37" aria-hidden="true" tabindex="-1"></a>      all_errors[[path]] <span class="ot">&lt;-</span> result_or_error</span>
+<span id="cb45-38"><a href="#cb45-38" aria-hidden="true" tabindex="-1"></a>      <span class="fu">cat</span>(<span class="st">"  Backtrace:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-39"><a href="#cb45-39" aria-hidden="true" tabindex="-1"></a>      <span class="fu">print</span>(result_or_error<span class="sc">$</span>traceback) </span>
+<span id="cb45-40"><a href="#cb45-40" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb45-41"><a href="#cb45-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-42"><a href="#cb45-42" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb45-43"><a href="#cb45-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="fu">paste0</span>(<span class="st">"  file level: unknown error.</span><span class="sc">\n</span><span class="st">"</span>))</span>
+<span id="cb45-44"><a href="#cb45-44" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb45-45"><a href="#cb45-45" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb45-46"><a href="#cb45-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-47"><a href="#cb45-47" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"succeccfuly (file level):"</span>, <span class="fu">length</span>(all_results), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>succeccfuly (file level): 0 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"file catch critical error:"</span>, <span class="fu">length</span>(all_errors), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>file catch critical error: 0 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>final_row_results <span class="ot">&lt;-</span> all_results <span class="sc">%&gt;%</span> </span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(<span class="st">"results"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">flatten</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map_dfr</span>(as_tibble)</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">table of all rows</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+table of all rows</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(final_row_results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 0 × 0</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plan</span>(sequential)</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">paralel backend was stoped</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+paralel backend was stoped</code></pre>
+</div>
+</div>
+</section>
+<section id="етап-5-збереження-результатів" class="level4">
+<h4 class="anchored" data-anchor-id="етап-5-збереження-результатів"><strong>Етап 5: Збереження результатів</strong></h4>
+<ul>
+<li>Збережіть відфільтровані транзакції у файли за допомогою <code>walk2()</code> (наприклад, <code>high_value_1.csv</code>, <code>high_value_2.csv</code>, …).</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>output_dir <span class="ot">&lt;-</span> <span class="st">"data/transactions/high_value_output"</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(output_dir, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="co"># generate file names</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>n_files <span class="ot">&lt;-</span> <span class="fu">length</span>(high_value_transactions)</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>sequence <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(n_files)</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>output_filenames <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"high_value_"</span>, sequence, <span class="st">".csv"</span>)</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>output_paths <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(output_dir, output_filenames)</span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"files will be save in :</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">paste</span>(output_paths, <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>files will be save in :
+ data/transactions/high_value_output/high_value_1.csv, data/transactions/high_value_output/high_value_2.csv, data/transactions/high_value_output/high_value_3.csv, data/transactions/high_value_output/high_value_4.csv, data/transactions/high_value_output/high_value_5.csv </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="do">## saving with walk2()</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="fu">walk2</span>(</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">.x =</span> high_value_transactions, <span class="co"># Data frame (df)</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">.y =</span> output_paths,</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">.f =</span> <span class="sc">~</span> {</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># .x - current data frame</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># .y - current шлях</span></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>    readr<span class="sc">::</span><span class="fu">write_csv</span>(.x, <span class="at">file =</span> .y)</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="fu">paste</span>(<span class="st">"  file was saved:"</span>, <span class="fu">basename</span>(.y), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  file was saved: high_value_1.csv 
+  file was saved: high_value_2.csv 
+  file was saved: high_value_3.csv 
+  file was saved: high_value_4.csv 
+  file was saved: high_value_5.csv </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">results were saved</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+results were saved</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="do">## 5.3 Перевірка результатів</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">files were saved in:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+files were saved in:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">list.files</span>(output_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "high_value_1.csv" "high_value_2.csv" "high_value_3.csv" "high_value_4.csv"
+[5] "high_value_5.csv"</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="технічні-вимоги" class="level3">
+<h3 class="anchored" data-anchor-id="технічні-вимоги">💡 Технічні вимоги</h3>
+<ul>
+<li>Увесь код має бути написаний у <strong>функціональному стилі</strong>.</li>
+<li>Використовуйте <strong>лише</strong> <code>purrr</code>, <code>foreach</code>, <code>furrr</code>, <code>future</code> — <strong>без циклів <code>for</code>/<code>while</code></strong>.</li>
+<li>Конвеєр має бути <strong>відтворюваним</strong>, <strong>стійким до помилок</strong> та <strong>масштабованим</strong>.</li>
+<li>Усі файли завантажуються з папки <code>data/transactions/</code>.</li>
+</ul>
+<hr style="border: 1px solid #ddd; margin: 30px 0 10px 0;">
+<footer style="text-align: center; font-size: 0.9em; color: #666; padding: 15px; background: #f9f9f9; border-top: 1px solid #eee; margin-top: 20px;">
+  <p><strong>Виконав(ла): Маринченко Валерія Віталіївна</strong> | Група: <strong>КІ-24-1м</strong> | Викладач: Сидоренко В.М.</p>
+  <p>Кременчуцький національний університет імені Михайла Остроградського © 2025</p>
+</footer>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -114,19 +114,17 @@ all_data <- lapply(file_paths, read.csv) %>% bind_rows()
 Замість цього ми вбудовуємо обробку помилок **безпосередньо в функціонал**, використовуючи `tryCatch()` разом з `lapply()` або `map()`:
 
 ``` r
-# Безпечна функція для читання файлу
 safe_read_csv <- function(path) {
   tryCatch(
     read.csv(path, sep = "\t"),
     error = function(e) {
       message("❗ Помилка у файлі ", path, ": ", e$message)
-      # Повертаємо порожній tibble тієї ж структури (або просто NULL)
       tibble(.rows = 0)
     }
   )
 }
 
-# Завантаження всіх файлів, навіть якщо деякі пошкоджені
+# load all files
 file_paths <- list.files("data", pattern = "\\.csv$", full.names = TRUE)
 all_data <- lapply(file_paths, safe_read_csv) %>% bind_rows()
 ```
@@ -177,7 +175,7 @@ library(readr)
 library(purrr)
 library(tidyr)
 
-# Очікувані назви стовпців
+#expected column names
 EXPECTED_COLS <- c("product_id", "region", "units_sold", "price_per_unit", "discount_percent")
 ```
 
@@ -193,17 +191,16 @@ EXPECTED_COLS <- c("product_id", "region", "units_sold", "price_per_unit", "disc
 -   Об’єднайте результат у єдину таблицю `all_sales`.
 
 ```{r}
-# Очікувані типи стовпців
 EXPECTED_COL_TYPES <- cols(
   product_id = col_character(), 
   region = col_character(), 
-  units_sold = col_double(), # Обов'язково вказуємо число
+  units_sold = col_double(),
   price_per_unit = col_double(), 
   discount_percent = col_double()
 )
 
 safe_read_report <- function(path) {
-  # Порожній DF для повернення при помилці/невдачі
+  # empty dataframe
   empty_df <- tibble(
     product_id = character(), region = character(), units_sold = double(), 
     price_per_unit = double(), discount_percent = double()
@@ -211,37 +208,23 @@ safe_read_report <- function(path) {
   file_name <- basename(path)
   
   df <- tryCatch({
-    # !!! ВИПРАВЛЕНО: Примусово вказуємо типи стовпців !!!
     d <- readr::read_csv(path, col_types = EXPECTED_COL_TYPES, show_col_types = FALSE)
     
-    # Перевірка наявності всіх стовпців (після читання)
+    # colunms check
     if (!all(names(EXPECTED_COL_TYPES$cols) %in% names(d))) {
-      message(sprintf("%s відсутні ключові стовпці.", file_name))
+      message(sprintf("%s file has no key columns.", file_name))
       return(empty_df)
     }
     
     return(d)
     
   }, error = function(e) {
-    # Помилка читання або некоректний формат
-    message(sprintf("помилка читання файлу: %s. %s", file_name, e$message))
+    message(sprintf("read file error: %s. %s", file_name, e$message))
     return(empty_df)
   })
   
   return(df)
 }
-# Перезавантажуємо дані з виправленою функцією
-all_sales_list_fixed <- file_info %>%
-  mutate(data = map(path, safe_read_report))
-
-# Об'єднання, яке тепер повинно пройти без помилок типів
-all_sales_fixed <- all_sales_list_fixed %>%
-  mutate(month = gsub("\\.csv", "", file_name)) %>%
-  unnest(data) %>%
-  select(-path, -file_name) 
-
-cat("\nЗавантаження та об'єднання завершено з виправленням типів. Перші рядки all_sales_fixed:\n")
-print(head(all_sales_fixed))
 
 all_file_paths <- list.files("data/monthly_reports", full.names = TRUE, pattern = "\\.csv$")
 
@@ -260,7 +243,7 @@ all_sales <- all_sales_list %>%
   unnest(data) %>%
   select(-path, -file_name) 
 
-cat("\nЗавантаження та об'єднання завершено. Перші рядки all_sales:\n")
+cat("\nloading and joining were ended. first rows all_sales:\n")
 print(head(all_sales))
 
 ```
@@ -278,6 +261,8 @@ print(head(all_sales))
 > 💡 Використовуйте `group_by()` + `summarise()` — не `for`!
 
 ```{r}
+months <- c("jan", "feb", "mar", "apr", "may", "jun", 
+                 "jul", "aug", "sep", "oct", "nov", "dec")
 aggregated_sales <- all_sales %>%
   mutate(
     month_num = match(month, months),
@@ -286,13 +271,12 @@ aggregated_sales <- all_sales %>%
   ) %>%
   select(-month, -month_num) %>%
   rename(month = month_formatted) %>%
-  # видалення некоректних значень
+  # delete incorrect values
   filter(price_per_unit >= 0, units_sold >= 0) %>%
-  # розрахунок доходу
+  # calculate revenue
   mutate(
     revenue = units_sold * price_per_unit * (1 - discount_percent / 100)
   ) %>%
-  # агрегація за місяцем
   group_by(month) %>%
   summarise(
     total_revenue = sum(revenue, na.rm = TRUE),
@@ -301,7 +285,7 @@ aggregated_sales <- all_sales %>%
     .groups = "drop"
   )
 
-cat("\nАгреговані результати:\n")
+cat("\nagregated results:\n")
 print(aggregated_sales)
 ```
 
@@ -312,38 +296,34 @@ print(aggregated_sales)
 -   Використовуйте `colSums(is.na(...))` — не цикли!
 
 ```{r}
-# Кількість очікуваних файлів
+# number of expected files
 expected_files <- length(months)
 
-# Кількість завантажених файлів (де DataFrame не є порожнім)
+# number of loaded files
 loaded_files_count <- all_sales_list %>%
-  # Перевіряємо, які Data Frames не є порожніми
+  # check Data Frames doesn't empty
   mutate(is_empty = map_lgl(data, ~ nrow(.x) == 0)) %>%
   summarise(
     success_count = sum(!is_empty),
     failure_count = sum(is_empty)
   )
 
-cat(sprintf("\n--- Аналіз якості завантаження ---\n"))
-cat(sprintf("Очікувана кількість файлів: %d\n", expected_files))
-cat(sprintf("Кількість успішно завантажених файлів: %d\n", loaded_files_count$success_count))
-cat(sprintf("Кількість пошкоджених/порожніх файлів: %d\n", loaded_files_count$failure_count))
+cat(sprintf("number of succesfyly loaded files: %d\n", loaded_files_count$success_count))
+cat(sprintf("number of empty/destroyed files: %d\n", loaded_files_count$failure_count))
 
 na_analysis <- all_sales %>%
   group_by(month) %>%
-  # Розраховуємо кількість NA в кожному стовпці для кожної групи
+  # number of NA in every column
   summarise(
     total_rows = n(),
-    # Векторизована операція для підрахунку NA по всіх стовпцях
     n_na_rows = sum(rowSums(is.na(select(cur_data(), everything()))) > 0),
     .groups = "drop"
   ) %>%
   mutate(
-    # Частка рядків, що містять хоча б одне NA
     na_row_proportion = n_na_rows / total_rows
   )
 
-cat("\nЧастка рядків з NA (за місяцем):\n")
+cat("\npart of rows with NA (by month):\n")
 print(na_analysis)
 ```
 
@@ -355,16 +335,13 @@ print(na_analysis)
 -   Порівняйте швидкість за допомогою `system.time()` (не обов’язково в звіті, але для розуміння).
 
 ```{r}
-# Середня units_sold за місяць
+# avarage units_sold per month
 data_for_comparison <- all_sales %>% 
   mutate(month_id = match(month, months)) %>%
   select(month_id, units_sold)
 
 months_unique <- unique(data_for_comparison$month_id)
 
-# --------------------
-# 1. За допомогою for-циклу
-# --------------------
 time_for_loop <- system.time({
   results_for <- list()
   for (m_id in months_unique) {
@@ -373,22 +350,19 @@ time_for_loop <- system.time({
   }
 })
 
-# --------------------
-# 2. За допомогою sapply (Функціональний підхід)
-# --------------------
 time_sapply <- system.time({
   results_sapply <- sapply(months_unique, function(m_id) {
     mean(data_for_comparison$units_sold[data_for_comparison$month_id == m_id], na.rm = TRUE)
   })
 })
 
-cat("\n--- Порівняння швидкості обчислень ---\n")
-cat("Результати (перші 5): \n")
-cat("For-цикл: ", paste(round(head(unlist(results_for)), 2), collapse = ", "), "\n")
+
+cat("results (first 5): \n")
+cat("For: ", paste(round(head(unlist(results_for)), 2), collapse = ", "), "\n")
 cat("sapply:   ", paste(round(head(results_sapply), 2), collapse = ", "), "\n")
-cat("\nЧас виконання:\n")
+cat("\ntime:\n")
 print(tibble(
-  Method = c("for-цикл", "sapply"),
+  Method = c("for", "sapply"),
   Time = c(time_for_loop["elapsed"], time_sapply["elapsed"])
 ))
 

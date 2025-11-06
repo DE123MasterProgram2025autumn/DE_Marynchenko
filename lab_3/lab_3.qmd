@@ -128,6 +128,7 @@ execute:
 -   Залиште лише тих співробітників, які знають **мову R**.
 
 ```{r}
+library("tidyverse")
 emp_json_data <- jsonlite::read_json("data/hard_data.json", simplifyVector = TRUE)
 
 emp_json_data <- tibble::tribble(
@@ -141,21 +142,19 @@ emp_json_data <- tibble::tribble(
   mutate(skills = list(skills)) %>%
   ungroup()
 
-employees_df <- emp_json_data %>%
-  # Розгортаємо вкладену колонку 'skills'
-  # unnest_wider розгортає список колонок у новий набір колонок
+employees_df <- emp_json_data %>% 
+  # expand with 'skills' column to new columns set
   tidyr::unnest_wider(skills) %>%
-  # Розгортаємо колонку 'languages' у список і створюємо тимчасовий стовпець
+  # expand 'languages' to list and create temporary column
   tidyr::unnest_longer(languages, values_to = "lang") %>%
-  # Обчислюємо кількість мов, групуючи за ID
+  # calculate number of languages
   group_by(id, name, department, base_salary, tools) %>%
   mutate(n_langs = n_distinct(lang)) %>%
   ungroup() %>%
-  # Фільтруємо: залишаємо лише тих, хто знає R
   filter(lang == "R") %>%
-  # Залишаємо унікальні рядки, оскільки ми більше не потребуємо lang для фільтрації
+  # only uniqe rows
   distinct(id, name, department, base_salary, n_langs) %>%
-  # Перейменовуємо 'id' на 'employee_id' для подальшого об'єднання
+  # rename 'id' to 'employee_id'
   rename(employee_id = id)
 
 cat("Співробітники, які знають R:\n")
@@ -170,14 +169,14 @@ print(employees_df)
 -   Перетворіть обидві таблиці з «широкого» у «довгий» формат за допомогою `pivot_longer()` (якщо потрібно) або `bind_rows()`.
 
 ```{r}
-# Функція для об'єднання списку таблиць і додавання стовпця month
+# join list of tabels and adding 'month' column
 bind_and_format <- function(data_list, year = 2024, prefix = "sales_") {
   data_list %>%
-    # Присвоюємо імена елементам списку для bind_rows
+    # give new names to bind_rows
     purrr::set_names(c("jan", "feb", "mar")) %>%
-    # Вертикальне об'єднання, створення стовпця 'month'
+    # vertical join, create 'month' column
     bind_rows(.id = "month") %>%
-    # Форматування стовпця 'month'
+    # formatting 'month' column
     mutate(
       month = case_match(month,
         "jan" ~ paste0(year, "-01"),
@@ -189,13 +188,13 @@ bind_and_format <- function(data_list, year = 2024, prefix = "sales_") {
 }
 q1_months <- c("jan", "feb", "mar")
 ids <- c(101, 103, 104, 101, 102, 103)
-# Бонуси
+# bomnuses
 bonuses_q1 <- list(
   jan = tibble(employee_id = ids[1:3], bonus_amount = c(2500, 1000, 500)),
   feb = tibble(employee_id = ids[4:6], bonus_amount = c(3000, 500, 1500)),
   mar = tibble(employee_id = c(101, 103), bonus_amount = c(2000, 2000))
 )
-# Штрафи
+# fines
 penalties_q1 <- list(
   jan = tibble(employee_id = ids[4:6], penalty_amount = c(0, 500, 0)),
   feb = tibble(employee_id = c(102, 104), penalty_amount = c(100, 300)),
@@ -205,10 +204,10 @@ penalties_q1 <- list(
 bonuses_long <- bind_and_format(bonuses_q1)
 penalties_long <- bind_and_format(penalties_q1)
 
-cat("\nБонуси у 'довгому' форматі (перші 5 рядків):\n")
+cat("\nBonuses in long format (first 5 rows):\n")
 print(head(bonuses_long, 5))
 
-cat("\nШтрафи у 'довгому' форматі (перші 5 рядків):\n")
+cat("\nFines in long format (first 5 rows):\n")
 
 
 print(head(penalties_long, 5))
@@ -228,58 +227,47 @@ print(head(penalties_long, 5))
 
 ```{r}
 employees_df <- emp_json_data %>%
-  # Розгортаємо вкладену колонку 'skills'
-  # unnest_wider розгортає список колонок у новий набір колонок
+  # expand with 'skills' column to new columns set
   tidyr::unnest_wider(skills) %>%
-  # Розгортаємо колонку 'languages' у список і створюємо тимчасовий стовпець
+  # expand 'languages' to list and create temporary column
   tidyr::unnest_longer(languages, values_to = "lang") %>%
-  # Обчислюємо кількість мов, групуючи за ID
+  # calculate number of languages
   group_by(id, name, department, base_salary, tools) %>%
   mutate(n_langs = n_distinct(lang)) %>%
   ungroup() %>%
-  # Фільтруємо: залишаємо лише тих, хто знає R
   filter(lang == "R") %>%
-  # Залишаємо унікальні рядки, оскільки ми більше не потребуємо lang для фільтрації
+  # only uniqe
   distinct(id, name, department, base_salary, n_langs) %>%
-  # Перейменовуємо 'id' на 'employee_id' для подальшого об'єднання
   rename(employee_id = id)
 
 cat("Співробітники, які знають R:\n")
 print(employees_df)
 
 salary_analysis <- employees_df %>%
-  # Об'єднання з бонусами
   left_join(bonuses_long, by = "employee_id") %>%
-  # Об'єднання зі штрафами за employee_id та month
   full_join(penalties_long, by = c("employee_id", "month")) %>%
-  # Сортування для коректності віконних операцій (lag, cumsum)
   arrange(employee_id, month) %>%
-  # Заміна NA на 0 у бонусах та штрафах (якщо не було, то 0)
+  # replace NA to 0 in bonuses and fines
   mutate(
     bonus_amount = replace_na(bonus_amount, 0),
     penalty_amount = replace_na(penalty_amount, 0),
-    # Розрахунок фактичної зарплати
+    # calculate finel fee
     total_salary = base_salary + bonus_amount - penalty_amount
   ) %>%
-  # Розрахунок віконних функцій (групуємо за співробітником)
   group_by(employee_id) %>%
   mutate(
-    # Ранжування (використовуємо min_rank для коректності)
     bonus_rate = bonus_amount / base_salary,
     rank_bonus_rate = min_rank(desc(bonus_rate)),
-    
-    # Зсув (зміна зарплати відносно попереднього місяця)
-    # lag(total_salary) повертає total_salary попереднього рядка в групі (попереднього місяця)
+   
     salary_change = (total_salary - lag(total_salary)) / lag(total_salary),
     
-    # Накопичення (кумулятивна сума зарплати з початку кварталу)
     cum_salary = cumsum(total_salary)
   ) %>%
   ungroup() %>%
-  # Обмежуємося співробітниками, які знають R (після об'єднання могли з'явитися NA, якщо не було продажів)
+  # only know R
   filter(!is.na(name)) 
 
-cat("\nРезультати аналізу та віконних операцій:\n")
+cat("\nresulr:\n")
 print(salary_analysis %>% select(name, month, base_salary, bonus_amount, penalty_amount, total_salary, rank_bonus_rate, salary_change, cum_salary))
 
 ```
@@ -290,37 +278,33 @@ print(salary_analysis %>% select(name, month, base_salary, bonus_amount, penalty
 -   Визначте, чи є зв’язок між **кількістю мов програмування** та **середнім бонусом**.
 
 ```{r}
-# Створення довідника всіх місяців Q1
 all_months_q1 <- tibble(month = c("2024-01", "2024-02", "2024-03"))
 
-# Співробітники, які отримали бонус хоча б одного місяця
+# emploees with bonuses
 employees_with_bonus <- bonuses_long %>%
   distinct(employee_id, month)
 
-# Знаходимо employee_id, для яких є 3 записи у employees_with_bonus (один за кожен місяць Q1)
+# employee_id, where 3 employees_with_bonus
 employees_bonus_every_month <- employees_with_bonus %>%
-  # Об'єднуємо з all_months_q1, щоб переконатися, що у нас є повний набір місяців для кожного ID
+  # join with all_months_q1
   group_by(employee_id) %>%
   summarise(n_months = n_distinct(month), .groups = "drop") %>%
   filter(n_months == 3)
 
-# Виводимо повний список цих співробітників
+# full list of emploees
 employees_bonus_every_month_details <- employees_df %>%
   semi_join(employees_bonus_every_month, by = "employee_id")
 
-cat("\nСпівробітники, які отримували бонус кожного місяця Q1:\n")
+cat("\nemploees with every month bonus Q1:\n")
 print(employees_bonus_every_month_details)
 
 ```
 
 ```{r}
-# Групуємо за кількістю мов і обчислюємо середній бонус
+# avarage bonus by language
 bonus_vs_n_langs <- salary_analysis %>%
-  # Фільтруємо, оскільки base_salary і n_langs не змінюються за місяцями
   distinct(employee_id, base_salary, n_langs) %>%
-  # Об'єднуємо з усіма бонусами
   left_join(bonuses_long, by = "employee_id") %>%
-  # Групуємо та агрегуємо
   group_by(n_langs) %>%
   summarise(
     avg_bonus_per_employee = mean(bonus_amount, na.rm = TRUE),
@@ -328,21 +312,22 @@ bonus_vs_n_langs <- salary_analysis %>%
     .groups = "drop"
   )
 
-cat("\nЗв'язок між кількістю мов програмування та середнім бонусом:\n")
+cat("\navarage bonus by language:\n")
 print(bonus_vs_n_langs)
 
-# Перевірка на кореляцію
+# corellation check
 correlation_check <- salary_analysis %>%
   group_by(employee_id, n_langs) %>%
   summarise(avg_bonus = mean(bonus_amount, na.rm = TRUE), .groups = "drop") %>%
-  # Обчислення кореляції між кількістю мов та середнім бонусом
+  # calculate corelation of number of languages to avarage bonus
   summarise(
     correlation = cor(n_langs, avg_bonus)
   )
 
-cat(sprintf("\nКоефіцієнт кореляції між кількістю мов та середнім бонусом: %.2f\n", 
+cat(sprintf("\ncorelation of languages to avarage bonus: %.2f\n", 
             correlation_check$correlation))
 ```
+
 ------------------------------------------------------------------------
 
 ### Технічні вимоги
